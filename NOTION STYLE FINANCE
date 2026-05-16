@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Quest Widget</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --paper: #fffdf8;
+      --ink: #1d1d1f;
+      --soft: #d9d4ca;
+      --accent: #151515;
+      --green: #79d49b;
+      --red: #ff8f8f;
+      --yellow: #ffe08a;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --radius: 24px;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(0,0,0,0.03), transparent 20%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 24px,
+          rgba(0,0,0,0.025) 25px
+        ),
+        var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    .canvas {
+      width: 1300px;
+      height: 780px;
+      position: relative;
+      border: 2px dashed rgba(0,0,0,0.08);
+      border-radius: 36px;
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .noise {
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      pointer-events: none;
+      background-image:
+        radial-gradient(#000 0.8px, transparent 0.8px);
+      background-size: 16px 16px;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      right: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
+      transform: rotate(-4deg);
+      font-size: 20px;
+    }
+
+    .xp-bar {
+      width: 240px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid var(--ink);
+      overflow: hidden;
+      background: white;
+      position: relative;
+    }
+
+    .xp-fill {
+      width: 72%;
+      height: 100%;
+      background: linear-gradient(to right, #7ee7a8, #b7ffca);
+    }
+
+    .center-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .main-card {
+      width: 340px;
+      height: 470px;
+      background: var(--paper);
+      border-radius: 30px;
+      border: 2px solid rgba(0,0,0,0.08);
+      box-shadow: var(--shadow);
+      position: relative;
+      cursor: pointer;
+      transition: 0.45s ease;
+      overflow: hidden;
+    }
+
+    .main-card:hover {
+      transform: translateY(-12px) rotate(-2deg);
+    }
+
+    .main-card::before {
+      content: '';
+      position: absolute;
+      inset: 16px;
+      border: 2px dashed rgba(0,0,0,0.08);
+      border-radius: 24px;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chapter-tag {
+      width: fit-content;
+      padding: 8px 16px;
+      background: #fff;
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0.08);
+      font-size: 13px;
+      font-weight: 600;
+      transform: rotate(-2deg);
+    }
+
+    .title {
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 800;
+      margin-top: 20px;
+      letter-spacing: -2px;
+    }
+
+    .subtitle {
+      margin-top: 16px;
+      color: rgba(0,0,0,0.65);
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .doodle-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .coin {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: linear-gradient(to bottom right, #ffe8a6, #ffd15e);
+      border: 4px solid rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 16px 30px rgba(255,200,0,0.22);
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0px) rotate(-4deg); }
+      50% { transform: translateY(-14px) rotate(4deg); }
+    }
+
+    .hint {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: rgba(0,0,0,0.6);
+      margin-top: 24px;
+    }
+
+    .popup {
+      position: absolute;
+      width: 420px;
+      background: var(--paper);
+      border-radius: 28px;
+      border: 2px solid rgba(0,0,0,0.08);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      transition: 0.55s cubic-bezier(.2,.9,.2,1);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .popup.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .left-popup {
+      left: 80px;
+      top: 160px;
+      transform: translateX(80px) rotate(-6deg);
+    }
+
+    .left-popup.active {
+      transform: translateX(0) rotate(-3deg);
+    }
+
+    .right-popup {
+      right: 80px;
+      top: 120px;
+      transform: translateX(-80px) rotate(6deg);
+    }
+
+    .right-popup.active {
+      transform: translateX(0) rotate(2deg);
+    }
+
+    .popup-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+
+    .popup-text {
+      line-height: 1.7;
+      color: rgba(0,0,0,0.68);
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    .math-zone {
+      background: rgba(0,0,0,0.03);
+      border-radius: 20px;
+      padding: 20px;
+      border: 2px dashed rgba(0,0,0,0.08);
+    }
+
+    .formula {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .slider-group {
+      margin-top: 18px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: black;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 18px;
+      background: white;
+      border-radius: 18px;
+      border: 2px solid rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .result-number {
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .graph {
+      margin-top: 18px;
+      height: 120px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, #111, #666);
+      border-radius: 12px 12px 6px 6px;
+      transition: 0.4s ease;
+      min-height: 20px;
+      position: relative;
+    }
+
+    .bar::after {
+      content: attr(data-year);
+      position: absolute;
+      bottom: -26px;
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(0,0,0,0.5);
+    }
+
+    .floating-note {
+      position: absolute;
+      background: white;
+      border: 2px solid rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 14px;
+      box-shadow: var(--shadow);
+      transform: rotate(-4deg);
+    }
+
+    .note-1 {
+      left: 120px;
+      bottom: 70px;
+    }
+
+    .note-2 {
+      right: 140px;
+      bottom: 80px;
+      transform: rotate(5deg);
+    }
+
+    .scribble {
+      position: absolute;
+      font-size: 26px;
+      opacity: 0.08;
+      font-weight: 900;
+    }
+
+    .s1 { top: 120px; right: 180px; }
+    .s2 { left: 140px; top: 120px; }
+    .s3 { bottom: 120px; left: 50%; }
+
+    @media (max-width: 1200px) {
+      .canvas {
+        transform: scale(0.8);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="noise"></div>
+
+    <div class="scribble s1">∞</div>
+    <div class="scribble s2">$</div>
+    <div class="scribble s3">%</div>
+
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-badge">✦</div>
+        Finance Quest
+      </div>
+
+      <div class="xp-bar">
+        <div class="xp-fill"></div>
+      </div>
+    </div>
+
+    <div class="center-stage">
+      <div class="main-card" id="mainCard">
+        <div class="card-inner">
+          <div>
+            <div class="chapter-tag">LEVEL 01 · INVESTING</div>
+            <div class="title">Compound Growth</div>
+            <div class="subtitle">
+              Click the card to unlock the hidden mechanic behind why small investments become massive over time.
+            </div>
+          </div>
+
+          <div class="doodle-area">
+            <div class="coin">₹</div>
+          </div>
+
+          <div class="hint">
+            <span>Tap to expand concept</span>
+            <span>+120 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup left-popup" id="leftPopup">
+      <div class="popup-title">What is Compound Interest?</div>
+
+      <div class="popup-text">
+        Compound interest means your money earns money — and then that new money also earns money.
+        It creates an exponential snowball effect.
+      </div>
+
+      <div class="math-zone">
+        <div class="formula">A = P(1 + r/n)<sup>nt</sup></div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Initial Money</span>
+            <span id="principalValue">₹1000</span>
+          </div>
+          <input type="range" min="1000" max="50000" step="1000" value="1000" id="principalSlider">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Interest Rate</span>
+            <span id="rateValue">10%</span>
+          </div>
+          <input type="range" min="1" max="25" value="10" id="rateSlider">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Years</span>
+            <span id="timeValue">5 years</span>
+          </div>
+          <input type="range" min="1" max="30" value="5" id="timeSlider">
+        </div>
+      </div>
+    </div>
+
+    <div class="popup right-popup" id="rightPopup">
+      <div class="popup-title">Simulation Engine</div>
+
+      <div class="popup-text">
+        Watch how changing values affects your future wealth. Notice how time impacts growth more than expected.
+      </div>
+
+      <div class="result-box">
+        <div>
+          <div style="font-size:12px; opacity:0.6; margin-bottom:4px;">Future Value</div>
+          <div class="result-number" id="futureValue">₹1610</div>
+        </div>
+
+        <div style="font-size:42px;">📈</div>
+      </div>
+
+      <div class="graph">
+        <div class="bar" id="bar1" data-year="Y1" style="height:25%"></div>
+        <div class="bar" id="bar2" data-year="Y2" style="height:38%"></div>
+        <div class="bar" id="bar3" data-year="Y3" style="height:52%"></div>
+        <div class="bar" id="bar4" data-year="Y4" style="height:68%"></div>
+        <div class="bar" id="bar5" data-year="Y5" style="height:82%"></div>
+      </div>
+    </div>
+
+    <div class="floating-note note-1">
+      💡 Tiny habits → huge growth
+    </div>
+
+    <div class="floating-note note-2">
+      🎯 Time beats timing
+    </div>
+  </div>
+
+  <script>
+    const levels = [
+      {
+        level: 'LEVEL 01 · INVESTING',
+        title: 'Compound Growth',
+        subtitle: 'Click the card to unlock the hidden mechanic behind why small investments become massive over time.',
+        icon: '₹',
+        formula: 'A = P(1 + r/n)^nt',
+        leftTitle: 'What is Compound Interest?',
+        leftText: 'Compound interest means your money earns money — and then that new money also earns money.',
+        rightTitle: 'Simulation Engine',
+        rightText: 'Watch how changing values affects your future wealth.',
+        accent: '#ffd15e',
+        bg: '#f7f5ef',
+        graph: ['#111', '#666'],
+        note1: '💡 Tiny habits → huge growth',
+        note2: '🎯 Time beats timing'
+      },
+      {
+        level: 'LEVEL 02 · BUDGETING',
+        title: 'Cash Flow Quest',
+        subtitle: 'Control spending, savings, and lifestyle to survive the monthly money maze.',
+        icon: '💸',
+        formula: 'Savings = Income - Expenses',
+        leftTitle: 'Why Budgeting Matters',
+        leftText: 'Budgeting reveals where your money leaks away and helps build sustainable wealth.',
+        rightTitle: 'Expense Simulator',
+        rightText: 'Increase spending and see how savings collapse over time.',
+        accent: '#79d4ff',
+        bg: '#eef8ff',
+        graph: ['#1d4ed8', '#60a5fa'],
+        note1: '📉 Small leaks sink ships',
+        note2: '🧠 Spend intentionally'
+      },
+      {
+        level: 'LEVEL 03 · STOCK MARKET',
+        title: 'Volatility Arena',
+        subtitle: 'Experience risk, reward, and emotional investing through market swings.',
+        icon: '📈',
+        formula: 'Return = (Final - Initial)/Initial',
+        leftTitle: 'What is Volatility?',
+        leftText: 'Stocks move unpredictably. Risk and reward usually travel together.',
+        rightTitle: 'Market Pulse',
+        rightText: 'Higher volatility can create larger gains — or deeper losses.',
+        accent: '#8b5cf6',
+        bg: '#f5f0ff',
+        graph: ['#7c3aed', '#c084fc'],
+        note1: '⚡ High risk ≠ guaranteed reward',
+        note2: '📊 Patience beats panic'
+      },
+      {
+        level: 'LEVEL 04 · INFLATION',
+        title: 'Inflation Escape',
+        subtitle: 'See how rising prices slowly reduce purchasing power over time.',
+        icon: '🔥',
+        formula: 'Real Value = Money / (1+i)^t',
+        leftTitle: 'The Silent Wealth Killer',
+        leftText: 'Inflation quietly decreases what your money can buy in the future.',
+        rightTitle: 'Purchasing Power Engine',
+        rightText: 'Increase inflation and watch future value shrink dramatically.',
+        accent: '#ff8f8f',
+        bg: '#fff1f1',
+        graph: ['#ef4444', '#fca5a5'],
+        note1: '🔥 Prices rise silently',
+        note2: '🛡 Investing fights inflation'
+      }
+    ];
+
+    let currentLevel = 0;
+    let expanded = false;
+
+    const mainCard = document.getElementById('mainCard');
+    const leftPopup = document.getElementById('leftPopup');
+    const rightPopup = document.getElementById('rightPopup');
+
+    const logo = document.querySelector('.logo');
+    const chapterTag = document.querySelector('.chapter-tag');
+    const title = document.querySelector('.title');
+    const subtitle = document.querySelector('.subtitle');
+    const coin = document.querySelector('.coin');
+    const formula = document.querySelector('.formula');
+    const popupTitles = document.querySelectorAll('.popup-title');
+    const popupTexts = document.querySelectorAll('.popup-text');
+    const note1 = document.querySelector('.note-1');
+    const note2 = document.querySelector('.note-2');
+
+    const principalSlider = document.getElementById('principalSlider');
+    const rateSlider = document.getElementById('rateSlider');
+    const timeSlider = document.getElementById('timeSlider');
+
+    const principalValue = document.getElementById('principalValue');
+    const rateValue = document.getElementById('rateValue');
+    const timeValue = document.getElementById('timeValue');
+    const futureValue = document.getElementById('futureValue');
+
+    const bars = [
+      document.getElementById('bar1'),
+      document.getElementById('bar2'),
+      document.getElementById('bar3'),
+      document.getElementById('bar4'),
+      document.getElementById('bar5')
+    ];
+
+    function applyLevel(index) {
+      const level = levels[index];
+
+      document.body.style.background = `
+        radial-gradient(circle at top left, rgba(0,0,0,0.03), transparent 20%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 24px,
+          rgba(0,0,0,0.025) 25px
+        ),
+        ${level.bg}
+      `;
+
+      chapterTag.textContent = level.level;
+      title.textContent = level.title;
+      subtitle.textContent = level.subtitle;
+      coin.textContent = level.icon;
+      formula.textContent = level.formula;
+
+      popupTitles[0].textContent = level.leftTitle;
+      popupTitles[1].textContent = level.rightTitle;
+
+      popupTexts[0].textContent = level.leftText;
+      popupTexts[1].textContent = level.rightText;
+
+      note1.textContent = level.note1;
+      note2.textContent = level.note2;
+
+      coin.style.background = `linear-gradient(to bottom right, ${level.accent}, white)`;
+      coin.style.boxShadow = `0 16px 30px ${level.accent}55`;
+
+      document.querySelector('.xp-fill').style.background = `linear-gradient(to right, ${level.accent}, white)`;
+
+      bars.forEach(bar => {
+        bar.style.background = `linear-gradient(to top, ${level.graph[0]}, ${level.graph[1]})`;
+      });
+
+      mainCard.animate([
+        { transform: 'scale(0.95) rotate(-3deg)', opacity: 0.5 },
+        { transform: 'scale(1) rotate(0deg)', opacity: 1 }
+      ], {
+        duration: 500,
+        easing: 'ease'
+      });
+    }
+
+    logo.addEventListener('click', () => {
+      currentLevel++;
+
+      if (currentLevel >= levels.length) {
+        currentLevel = 0;
+      }
+
+      applyLevel(currentLevel);
+    });
+
+    mainCard.addEventListener('click', () => {
+      expanded = !expanded;
+
+      leftPopup.classList.toggle('active');
+      rightPopup.classList.toggle('active');
+
+      mainCard.style.transform = expanded
+        ? 'scale(0.92) rotate(-4deg)'
+        : 'scale(1)';
+    });
+
+    function calculateCompound() {
+      const P = parseFloat(principalSlider.value);
+      const r = parseFloat(rateSlider.value) / 100;
+      const t = parseFloat(timeSlider.value);
+      const n = 1;
+
+      let A;
+
+      if (currentLevel === 0) {
+        A = P * Math.pow((1 + r / n), n * t);
+      }
+      else if (currentLevel === 1) {
+        A = P - (r * P * t * 0.5);
+      }
+      else if (currentLevel === 2) {
+        A = P * (1 + ((Math.random() * r * 2) - r/2));
+      }
+      else {
+        A = P / Math.pow((1 + r), t/5);
+      }
+
+      principalValue.textContent = `₹${P}`;
+      rateValue.textContent = `${rateSlider.value}%`;
+      timeValue.textContent = `${t} years`;
+
+      futureValue.textContent = `₹${Math.abs(Math.round(A)).toLocaleString()}`;
+
+      for (let i = 0; i < bars.length; i++) {
+        let height;
+
+        if (currentLevel === 2) {
+          height = Math.random() * 100;
+        } else if (currentLevel === 3) {
+          height = 100 - ((i + 1) * 15);
+        } else {
+          const val = P * Math.pow((1 + r), i + 1);
+          height = Math.min(100, (val / Math.abs(A)) * 100);
+        }
+
+        bars[i].style.height = `${Math.max(height, 12)}%`;
+      }
+    }
+
+    principalSlider.addEventListener('input', calculateCompound);
+    rateSlider.addEventListener('input', calculateCompound);
+    timeSlider.addEventListener('input', calculateCompound);
+
+    applyLevel(0);
+    calculateCompound();
+  </script>
+</body>
+</html>
