@@ -813,6 +813,11 @@ function simulateCity() {
     description = 'Too much money is being printed. Prices rise rapidly and the currency starts collapsing.';
   }
 
+  else if (print > 75 && tax > 30 && tax < 55 && spend > 40 && spend < 70) {
+    state = 'Liquidity Mirage';
+    description = 'The city appears stable and wealthy because huge amounts of new money keep businesses and markets active artificially.';
+  }
+
   else if (print > 50 && spend > 70) {
     state = 'Artificial Boom';
     description = 'The economy looks rich temporarily because money is flooding the system unnaturally.';
