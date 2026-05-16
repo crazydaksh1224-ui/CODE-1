@@ -623,8 +623,8 @@
 
       const data = JSON.parse(saved);
 
-      completedTasks = 0;
-      totalXP = 0;
+      completedTasks = data.completedTasks || 0;
+      totalXP = data.totalXP || 0;
 
       if (data.darkMode) {
         document.body.classList.add('dark');
@@ -732,7 +732,14 @@
 
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+
+        const wasCompletedTodo = card.querySelector('.todo-box.active') && !card.querySelector('.deadline-box');
+        const progressInput = card.querySelector('.progress-input');
+        const wasCompletedProgress = progressInput && Number(progressInput.value) >= 100;
+        const wasCompletedDeadline = card.querySelector('.deadline-box.active');
+
         card.remove();
+
         updateStats();
         saveData();
       });
