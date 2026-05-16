@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gamified Notion Widget</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Comic Sans MS", "Segoe Print", cursive;
+    }
+
+    body {
+      --bg: #f5f5f2;
+      --text: #1d1d1d;
+      --panel: #ffffff;
+      --card: #fcfcfc;
+      --input: #fafafa;
+      --shadow: #1d1d1d;
+      --progress-bg: #ececec;
+
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      transition: background 0.35s ease, color 0.35s ease;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    body.dark {
+      --bg: #151515;
+      --text: #f5f5f2;
+      --panel: #222222;
+      --card: #2b2b2b;
+      --input: #333333;
+      --shadow: #000000;
+      --progress-bg: #3b3b3b;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 28px;
+      right: 20px;
+      width: 42px;
+      height: 22px;
+      background: var(--panel);
+      border: 3px solid var(--text);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px var(--shadow);
+      z-index: 999;
+    }
+
+    .toggle-circle {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: var(--text);
+      border-radius: 50%;
+      left: 3px;
+      transition: 0.3s ease;
+    }
+
+    body.dark .toggle-circle {
+      left: 21px;
+    }
+
+    .app {
+      width: 100%;
+      height: calc(100vh - 40px);
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+    }
+
+    .panel,
+    .workspace {
+      background: var(--panel);
+      border: 3px solid var(--text);
+      border-radius: 28px;
+      box-shadow: 8px 8px 0px var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .workspace {
+      padding: 34px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .workspace-header {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .character-card {
+      width: 280px;
+      min-height: 240px;
+      border: none;
+      border-radius: 18px;
+      background: var(--card);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      isolation: isolate;
+    }
+
+    .character-card::after {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -55%;
+      width: 26%;
+      height: 160%;
+      background: rgba(255,255,255,0.16);
+      border-radius: 8px;
+      transform: rotate(12deg);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      backdrop-filter: blur(1px);
+      animation: animeGlare 3.5s linear infinite;
+    }
+
+    @keyframes animeGlare {
+      0% {
+        left: -60%;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      24% {
+        opacity: 1;
+      }
+
+      38% {
+        left: 125%;
+        opacity: 0;
+      }
+
+      100% {
+        left: 125%;
+        opacity: 0;
+      }
+    }
+
+    .character-card input {
+      display: none;
+    }
+
+    .character-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .plus-icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+
+    .stats-panel {
+      flex: 1;
+      display: flex;
+      gap: 12px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: var(--card);
+      border: 3px solid var(--text);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 4px 4px 0px var(--shadow);
+      padding: 10px;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input,
+    select,
+    button {
+      border: 3px solid var(--text);
+      border-radius: 18px;
+      background: var(--input);
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 15px;
+      outline: none;
+      box-shadow: 4px 4px 0px #1d1d1d;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.45);
+    }
+
+    body:not(.dark) input::placeholder {
+      color: rgba(0,0,0,0.35);
+    }
+
+    body.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(2);
+      cursor: pointer;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: bold;
+    }
+
+    .card-area {
+      flex: none;
+      overflow: visible;
+      overflow-x: hidden;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-auto-rows: max-content;
+      column-gap: 32px;
+      row-gap: 42px;
+      align-content: start;
+      align-items: start;
+      justify-items: stretch;
+      padding: 24px 18px 80px;
+      width: 100%;
+    }
+
+    @keyframes smoothCardEnter {
+      0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+      }
+
+      60% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.01);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0px) scale(1);
+      }
+    }
+
+    .task-card {
+      background: var(--card);
+      border: 3px solid var(--text);
+      border-radius: 24px;
+      padding: 18px;
+      width: 100%;
+      max-width: 100%;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      box-shadow: 6px 6px 0px #1d1d1d;
+      transition: 0.25s ease;
+      animation: smoothCardEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .task-card:hover {
+      transform: translateY(-3px);
+      z-index: 2;
+    }
+
+    .scribble {
+      position: absolute;
+      top: 10px;
+      right: 16px;
+      width: 34px;
+      height: 34px;
+      border: 3px solid var(--text);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: white;
+      color: black;
+      user-select: none;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body.dark .scribble {
+      background: white;
+      color: black;
+    }
+
+    .task-title {
+      font-size: 20px;
+      font-weight: bold;
+      padding-right: 28px;
+      line-height: 1.2;
+    }
+
+    .todo-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 15px;
+    }
+
+    .todo-check {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--text);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: black;
+      font-weight: bold;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body.dark .todo-check {
+      background: #2a2a2a;
+      color: white;
+    }
+
+    .todo-box.active .todo-check {
+      background: var(--text);
+      color: white;
+    }
+
+    body.dark .todo-box.active .todo-check {
+      background: white;
+      color: black;
+    }
+
+    .todo-box.active .todo-text {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 24px;
+      border: 3px solid var(--text);
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--progress-bg);
+    }
+
+    .deadline-input-wrap {
+      width: 100%;
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      border: 3px solid var(--text);
+      border-radius: 16px;
+      background: var(--input);
+      box-shadow: 4px 4px 0px #1d1d1d;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .deadline-input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      font-size: 15px;
+      min-height: 56px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #1d1d1d;
+      transition: width 0.3s ease;
+    }
+
+    .xp-popup {
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--text);
+      color: var(--bg);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: bold;
+      animation: xpFloat 1s ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes xpFloat {
+      0% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(0px);
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-100%) translateX(40px);
+      }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle" id="themeToggle">
+    <div class="toggle-circle"></div>
+  </div>
+
+  <div class="app">
+    <div class="panel">
+      <h1>Gamified<br />Work Stats ✏️</h1>
+
+      <div class="input-group">
+        <label>Field Name</label>
+        <input type="text" id="fieldName" placeholder="Type your task name..." />
+      </div>
+
+      <div class="input-group">
+        <label>Card Type</label>
+        <select id="fieldType">
+          <option value="todo">To-Do Checkbox</option>
+          <option value="progress">% Work Done</option>
+          <option value="deadline">Deadline + Alarm</option>
+        </select>
+      </div>
+
+      <button id="createBtn">Create Card ✨</button>
+    </div>
+
+    <div class="workspace">
+      <div class="workspace-header">
+        <label class="character-card">
+          <input type="file" id="characterUpload" accept="image/png,image/jpeg" />
+          <div class="plus-icon" id="plusIcon">+</div>
+          <img class="character-preview" id="characterPreview" style="display:none;" />
+        </label>
+
+        <div class="stats-panel">
+          <div class="stat-box">
+            <div class="stat-number" id="completedCount">0</div>
+            <div class="stat-label">CLEARED</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-number" id="pendingCount">0</div>
+            <div class="stat-label">PENDING</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-number" id="xpCount">0</div>
+            <div class="stat-label">XP</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-area" id="cardArea"></div>
+    </div>
+  </div>
+
+  <script>
+    const createBtn = document.getElementById('createBtn');
+    const cardArea = document.getElementById('cardArea');
+    const fieldName = document.getElementById('fieldName');
+    const fieldType = document.getElementById('fieldType');
+    const themeToggle = document.getElementById('themeToggle');
+    const completedCount = document.getElementById('completedCount');
+    const pendingCount = document.getElementById('pendingCount');
+    const xpCount = document.getElementById('xpCount');
+
+    let completedTasks = 0;
+    let totalXP = 0;
+
+    const STORAGE_KEY = 'gamified-work-stats-data';
+
+    function updateStats() {
+      const totalCards = document.querySelectorAll('.task-card').length;
+      completedCount.textContent = completedTasks;
+      pendingCount.textContent = Math.max(0, totalCards - completedTasks);
+      xpCount.textContent = totalXP;
+    }
+
+    function saveData() {
+      const data = {
+        completedTasks,
+        totalXP,
+        darkMode: document.body.classList.contains('dark'),
+        image: characterPreview.src || '',
+        cards: []
+      };
+
+      document.querySelectorAll('.task-card').forEach(card => {
+        const title = card.querySelector('.task-title')?.textContent;
+
+        if (card.querySelector('.progress-input')) {
+          data.cards.push({
+            type: 'progress',
+            title,
+            value: card.querySelector('.progress-input').value
+          });
+        }
+
+        else if (card.querySelector('.deadline-input')) {
+          data.cards.push({
+            type: 'deadline',
+            title,
+            deadline: card.querySelector('.deadline-input').value,
+            completed: card.querySelector('.deadline-box').classList.contains('active')
+          });
+        }
+
+        else {
+          data.cards.push({
+            type: 'todo',
+            title,
+            completed: card.querySelector('.todo-box').classList.contains('active')
+          });
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) return;
+
+      const data = JSON.parse(saved);
+
+      completedTasks = 0;
+      totalXP = 0;
+
+      if (data.darkMode) {
+        document.body.classList.add('dark');
+      }
+
+      if (data.image) {
+        characterPreview.src = data.image;
+        characterPreview.style.display = 'block';
+        plusIcon.style.display = 'none';
+      }
+
+      if (data.cards?.length) {
+        data.cards.forEach(cardData => {
+          fieldName.value = cardData.title;
+          fieldType.value = cardData.type;
+
+          createCard(true);
+
+          const latestCard = cardArea.lastElementChild;
+
+          if (cardData.type === 'todo' && cardData.completed) {
+            latestCard.click();
+          }
+
+          if (cardData.type === 'progress') {
+            const input = latestCard.querySelector('.progress-input');
+            input.value = cardData.value || 0;
+            input.dispatchEvent(new Event('input'));
+          }
+
+          if (cardData.type === 'deadline') {
+            const input = latestCard.querySelector('.deadline-input');
+
+            input.value = cardData.deadline || '';
+            input.dispatchEvent(new Event('change'));
+
+            if (cardData.completed) {
+              latestCard.click();
+            }
+          }
+        });
+      }
+
+      updateStats();
+    }
+
+    function showXP(card, amount) {
+      const popup = document.createElement('div');
+      popup.className = 'xp-popup';
+      popup.textContent = `+${amount} XP`;
+      card.appendChild(popup);
+
+      setTimeout(() => popup.remove(), 1000);
+    }
+
+    function createCard(skipSave = false) {
+      const name = fieldName.value.trim();
+      const type = fieldType.value;
+
+      if (!name) return;
+
+      const card = document.createElement('div');
+      card.className = 'task-card';
+
+      let content = `
+        <div class="scribble">✕</div>
+        <div class="task-title">${name}</div>
+      `;
+
+      if (type === 'todo') {
+        content += `
+          <div class="todo-box">
+            <div class="todo-check"></div>
+            <div class="todo-text">Mark complete</div>
+          </div>
+        `;
+      }
+
+      if (type === 'progress') {
+        content += `
+          <input type="number" class="progress-input" min="0" max="100" value="0">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+        `;
+      }
+
+      if (type === 'deadline') {
+        content += `
+          <div class="deadline-input-wrap">
+            <input type="datetime-local" class="deadline-input">
+          </div>
+          <div class="todo-box deadline-box">
+            <div class="todo-check"></div>
+            <div class="todo-text">Deadline complete</div>
+          </div>
+          <div class="alarm-status">No deadline set yet.</div>
+        `;
+      }
+
+      card.innerHTML = content;
+      cardArea.appendChild(card);
+
+      const deleteBtn = card.querySelector('.scribble');
+
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.remove();
+        updateStats();
+        saveData();
+      });
+
+      if (type === 'todo') {
+        const todo = card.querySelector('.todo-box');
+
+        const toggle = () => {
+          todo.classList.toggle('active');
+          const active = todo.classList.contains('active');
+          todo.querySelector('.todo-check').textContent = active ? '✓' : '';
+
+          if (active) {
+            completedTasks++;
+            totalXP += 25;
+            showXP(card, 25);
+          } else {
+            completedTasks--;
+            totalXP -= 25;
+          }
+
+          updateStats();
+          saveData();
+        };
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.scribble')) return;
+          toggle();
+        });
+      }
+
+      if (type === 'progress') {
+        const input = card.querySelector('.progress-input');
+        const fill = card.querySelector('.progress-fill');
+        let completed = false;
+
+        input.addEventListener('input', () => {
+          let value = parseInt(input.value) || 0;
+          value = Math.max(0, Math.min(100, value));
+          input.value = value;
+          fill.style.width = `${value}%`;
+
+          if (value === 100 && !completed) {
+            completed = true;
+            completedTasks++;
+            totalXP += 35;
+            showXP(card, 35);
+            updateStats();
+          }
+
+          if (value < 100 && completed) {
+            completed = false;
+            completedTasks--;
+            totalXP -= 35;
+            updateStats();
+          }
+        });
+      }
+
+      if (type === 'deadline') {
+        const deadlineBox = card.querySelector('.deadline-box');
+        const deadlineWrap = card.querySelector('.deadline-input-wrap');
+        const deadlineInput = card.querySelector('.deadline-input');
+        const status = card.querySelector('.alarm-status');
+
+        const toggle = () => {
+          deadlineBox.classList.toggle('active');
+          const active = deadlineBox.classList.contains('active');
+          deadlineBox.querySelector('.todo-check').textContent = active ? '✓' : '';
+
+          if (active) {
+            completedTasks++;
+            totalXP += 40;
+            showXP(card, 40);
+          } else {
+            completedTasks--;
+            totalXP -= 40;
+          }
+
+          updateStats();
+          saveData();
+        };
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.scribble')) return;
+          if (e.target.closest('.deadline-input')) return;
+          toggle();
+        });
+
+        deadlineWrap.addEventListener('click', () => {
+          deadlineInput.focus();
+          deadlineInput.click();
+        });
+
+        deadlineInput.addEventListener('change', () => {
+          if (!deadlineInput.value) {
+            status.textContent = 'No deadline set yet.';
+            saveData();
+            return;
+          }
+
+          const date = new Date(deadlineInput.value);
+          status.innerHTML = `⏰ Reminder active for:<br><strong>${date.toLocaleString()}</strong>`;
+          saveData();
+        });
+      }
+
+      fieldName.value = '';
+      updateStats();
+
+      if (!skipSave) {
+        saveData();
+      }
+    }
+
+    createBtn.addEventListener('click', createCard);
+
+    fieldName.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && fieldName.value.trim()) {
+        createCard();
+      }
+    });
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      saveData();
+    });
+
+    const characterUpload = document.getElementById('characterUpload');
+    const characterPreview = document.getElementById('characterPreview');
+    const plusIcon = document.getElementById('plusIcon');
+
+    characterUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        characterPreview.src = e.target.result;
+        characterPreview.style.display = 'block';
+        plusIcon.style.display = 'none';
+        saveData();
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
