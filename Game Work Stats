@@ -43,9 +43,9 @@
     }
 
     .theme-toggle {
-      position: fixed;
-      top: 28px;
-      right: 20px;
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
       width: 42px;
       height: 22px;
       background: var(--panel);
@@ -96,6 +96,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      position: relative;
     }
 
     .workspace {
@@ -473,9 +474,7 @@
   </style>
 </head>
 <body>
-  <div class="theme-toggle" id="themeToggle">
-    <div class="toggle-circle"></div>
-  </div>
+  
 
   <div class="app">
     <div class="panel">
@@ -496,6 +495,10 @@
       </div>
 
       <button id="createBtn">Create Card ✨</button>
+
+      <div class="theme-toggle" id="themeToggle">
+        <div class="toggle-circle"></div>
+      </div>
     </div>
 
     <div class="workspace">
