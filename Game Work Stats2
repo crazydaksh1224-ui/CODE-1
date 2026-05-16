@@ -547,9 +547,31 @@
     const STORAGE_KEY = 'gamified-work-stats-data';
 
     function updateStats() {
-      const totalCards = document.querySelectorAll('.task-card').length;
+      const cards = document.querySelectorAll('.task-card');
+      const totalCards = cards.length;
+
+      let currentCompletedVisible = 0;
+
+      cards.forEach(card => {
+        const todo = card.querySelector('.todo-box.active');
+        const progressInput = card.querySelector('.progress-input');
+        const deadlineBox = card.querySelector('.deadline-box.active');
+
+        if (todo && !card.querySelector('.deadline-box')) {
+          currentCompletedVisible++;
+        }
+
+        if (progressInput && Number(progressInput.value) >= 100) {
+          currentCompletedVisible++;
+        }
+
+        if (deadlineBox) {
+          currentCompletedVisible++;
+        }
+      });
+
       completedCount.textContent = completedTasks;
-      pendingCount.textContent = Math.max(0, totalCards - completedTasks);
+      pendingCount.textContent = Math.max(0, totalCards - currentCompletedVisible);
       xpCount.textContent = totalXP;
     }
 
