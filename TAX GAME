@@ -471,6 +471,52 @@ input[type='range'] {
   100% { transform: translateX(-1px) rotate(-1deg); }
 }
 
+.economy-card {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: 340px;
+  background: #ffffff;
+  border-radius: 26px;
+  border: 2px dashed rgba(0,0,0,0.08);
+  padding: 20px;
+  z-index: 40;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  transform: rotate(-1deg);
+}
+
+.economy-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.economy-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1f1f1f;
+}
+
+.economy-state {
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.economy-description {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(0,0,0,0.7);
+}
+
 @media(max-width: 1300px) {
   .widget {
     transform: scale(0.8);
@@ -587,6 +633,21 @@ input[type='range'] {
 <div class="cloud cloud1"></div>
 <div class="cloud cloud2"></div>
 
+<div class="economy-card" id="economyCard">
+  <div class="economy-header">
+    <div class="economy-dot"></div>
+    CITY ANALYSIS
+  </div>
+
+  <div class="economy-state" id="economyState">
+    Stable Growth
+  </div>
+
+  <div class="economy-description" id="economyDescription">
+    Businesses are active, people are spending normally, and the city's currency remains healthy.
+  </div>
+</div>
+
 <div class="city">
 
 <div class="buildings">
@@ -625,6 +686,8 @@ const currencyMetric = document.getElementById('currencyMetric');
 
 const alertBox = document.getElementById('alertBox');
 const currencyBox = document.getElementById('currencyBox');
+const economyState = document.getElementById('economyState');
+const economyDescription = document.getElementById('economyDescription');
 const cityPanel = document.getElementById('cityPanel');
 const sun = document.getElementById('sun');
 const ground = document.getElementById('ground');
@@ -726,6 +789,72 @@ function simulateCity() {
     currencyBox.textContent = 'Currency Stable';
     currencyBox.style.background = '#ffffff';
   }
+
+  let state = 'Stable Growth';
+  let description = 'Businesses are active, people are spending normally, and the city remains economically healthy.';
+
+  if (tax < 20 && spend < 30 && print < 20) {
+    state = 'Low Tax Capitalism';
+    description = 'Companies rapidly expand because taxes are low, but public services feel underfunded.';
+  }
+
+  else if (tax > 60 && spend < 40 && print < 20) {
+    state = 'Business Exodus';
+    description = 'High taxes are pushing companies away. Buildings stop growing and economic activity slows down.';
+  }
+
+  else if (tax > 50 && spend > 70 && print < 30) {
+    state = 'Heavy Welfare State';
+    description = 'The government spends heavily on public systems, but businesses struggle under high taxation.';
+  }
+
+  else if (print > 70 && tax < 30) {
+    state = 'Hyperinflation';
+    description = 'Too much money is being printed. Prices rise rapidly and the currency starts collapsing.';
+  }
+
+  else if (print > 50 && spend > 70) {
+    state = 'Artificial Boom';
+    description = 'The economy looks rich temporarily because money is flooding the system unnaturally.';
+  }
+
+  else if (tax < 25 && spend > 75) {
+    state = 'Debt Explosion';
+    description = 'The city spends far more than it earns. Growth feels good now but debt keeps increasing.';
+  }
+
+  else if (tax > 70 && print > 50) {
+    state = 'Economic Panic';
+    description = 'Citizens are heavily taxed while the currency weakens. Confidence in the economy falls sharply.';
+  }
+
+  else if (tax > 40 && spend > 60 && print > 60) {
+    state = 'Controlled Collapse';
+    description = 'The government is trying to save the economy with spending and printing, but inflation worsens.';
+  }
+
+  else if (tax < 15 && spend < 20 && print > 40) {
+    state = 'Corporate Bubble';
+    description = 'Private wealth grows quickly, but the city becomes unstable because fake money fuels the market.';
+  }
+
+  else if (tax > 35 && tax < 55 && spend > 45 && spend < 70 && print < 35) {
+    state = 'Balanced Economy';
+    description = 'Taxes and spending stay relatively balanced. Growth is slower but stable and sustainable.';
+  }
+
+  else if (spend < 20 && print < 20 && tax > 40) {
+    state = 'Austerity Era';
+    description = 'Government cuts spending to control finances, but people experience slower growth and fewer services.';
+  }
+
+  else if (tax < 35 && spend > 50 && print < 25) {
+    state = 'Healthy Expansion';
+    description = 'Businesses continue growing while the government still supports public infrastructure effectively.';
+  }
+
+  economyState.textContent = state;
+  economyDescription.textContent = description;
 }
 
 simulateCity();
