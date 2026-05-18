@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Chess Academy</title>
+    <!-- Tailwind CSS for rich responsive utility layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chess.js for flawless chess mechanics validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <!-- Google Fonts for a perfect mix of Hand-drawn and Academic Minimalist Serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables matching Notion light neutral theme with sketchy feel */
+        :root {
+            --bg-notion: #fbfbfa;
+            --text-notion: #37352f;
+            --border-notion: #000000;
+            --card-notion: #ffffff;
+            --accent-notion: #2eaadc;
+        }
+
+        body {
+            font-family: 'Lora', Georgia, serif;
+            background-color: var(--bg-notion);
+            color: var(--text-notion);
+            background-image: 
+                radial-gradient(#e5e5e5 1px, transparent 1px), 
+                radial-gradient(#e5e5e5 1px, #fbfbfa 1px);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+        }
+
+        .handwritten {
+            font-family: 'Architects Daughter', cursive;
+        }
+
+        .monospace {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        /* Sketchy/Hand-drawn SVG filter effect */
+        .sketchy-border {
+            filter: url(#rough-edge);
+            border: 2px solid var(--border-notion);
+        }
+
+        .sketchy-piece {
+            filter: url(#rough-edge-subtle);
+        }
+
+        /* Chess Board Styles */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            grid-template-rows: repeat(8, minmax(0, 1fr));
+            aspect-ratio: 1;
+        }
+
+        .square-light {
+            background-color: #ffffff;
+        }
+
+        .square-dark {
+            background-color: #e5e5e5;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.04) 5px, rgba(0,0,0,0.04) 10px);
+        }
+
+        .square-selected {
+            box-shadow: inset 0 0 0 4px #000000;
+            background-color: rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .square-dest {
+            position: relative;
+        }
+
+        .square-dest::after {
+            content: '';
+            position: absolute;
+            width: 24%;
+            height: 24%;
+            background-color: var(--text-notion);
+            border-radius: 50%;
+            top: 38%;
+            left: 38%;
+            opacity: 0.6;
+        }
+
+        /* Scrollbar styles to match Notion minimal look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d3d1cb;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aeaca6;
+        }
+
+        /* Custom sketchy button styles */
+        .sketchy-btn {
+            position: relative;
+            background: #ffffff;
+            border: 2px solid #000000;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 2px 2px 0px #000000;
+        }
+
+        .sketchy-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #000000;
+        }
+
+        .sketchy-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000000;
+        }
+
+        .card-shadow {
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        /* Smooth blur transition */
+        .blur-transition {
+            transition: filter 0.4s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-2 md:p-6 flex flex-col justify-between">
+
+    <!-- SVG Roughness Filters for generating genuine pencil-sketch borders -->
+    <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="http://www.w3.org/2000/svg">
+        <!-- High roughness for containers and cards -->
+        <filter id="rough-edge">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <!-- Soft roughness for chess pieces & icons to prevent illegibility -->
+        <filter id="rough-edge-subtle">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+    </svg>
+
+    <!-- Welcome & Level Choice Modal Background Overlay -->
+    <div id="welcome-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 overflow-y-auto">
+        <div class="bg-white p-6 md:p-8 max-w-3xl w-full sketchy-border card-shadow rounded-sm flex flex-col space-y-6 my-auto">
+            <div class="text-center space-y-2 border-b-2 border-dashed border-black pb-4">
+                <span class="text-xs tracking-widest uppercase monospace font-bold text-gray-500">Notion Widget Integration</span>
+                <h1 class="text-3xl md:text-5xl font-bold handwritten">Notion Chess Academy</h1>
+                <p class="text-sm md:text-base italic max-w-xl mx-auto text-gray-600">
+                    A handwritten, monotone conceptual guide designed to teach you deep strategic principles instead of brute calculation. Select a lesson level below to begin.
+                </p>
+            </div>
+
+            <!-- Level Selection Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- LEVEL 1 CARD -->
+                <button onclick="selectLevel(1)" class="text-left p-4 bg-white hover:bg-neutral-50 border-2 border-black sketchy-border card-shadow transition-all group flex flex-col justify-between h-48">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="monospace text-xs px-2 py-0.5 border border-black rounded">LVL 1</span>
+                            <!-- Hand drawn pawn icon -->
+                            <svg class="w-6 h-6 stroke-black fill-none" viewBox="0 0 24 24" stroke-width="1.5">
+                                <circle cx="12" cy="7" r="3" />
+                                <path d="M9 11c-1 0-2 1-2 2v2c0 2 2 3 5 3s5-1 5-3v-2c0-1-1-2-2-2H9z" />
+                                <path d="M6 20h12" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg handwritten">Openings & Space</h3>
+                        <p class="text-xs text-gray-500 mt-1">Master basic central control, development speed, and defensive structures like Scholar's Mate prevention.</p>
+                    </div>
+                    <span class="text-xs monospace mt-4 group-hover:underline">Start Lesson →</span>
+                </button>
+
+                <!-- LEVEL 2 CARD -->
+                <button onclick="selectLevel(2)" class="text-left p-4 bg-white hover:bg-neutral-50 border-2 border-black sketchy-border card-shadow transition-all group flex flex-col justify-between h-48">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="monospace text-xs px-2 py-0.5 border border-black rounded">LVL 2</span>
+                            <!-- Hand drawn knight icon -->
+                            <svg class="w-6 h-6 stroke-black fill-none" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path d="M10 22v-4h4v4" />
+                                <path d="M12 18c-3 0-5-2-5-5s2-5 5-5h1c1 0 2-1 2-2V4h2v2c0 3-1 4-4 4" />
+                                <path d="M7 13c-1 0-2 1-2 2v3" />
+                                <circle cx="11" cy="11" r="1" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg handwritten">Tactical Patterns</h3>
+                        <p class="text-xs text-gray-500 mt-1">Discover pins, skewers, and deadly knight forks. The enemy bot is actively scanning to catch your mistakes.</p>
+                    </div>
+                    <span class="text-xs monospace mt-4 group-hover:underline">Start Lesson →</span>
+                </button>
+
+                <!-- LEVEL 3 CARD -->
+                <button onclick="selectLevel(3)" class="text-left p-4 bg-white hover:bg-neutral-50 border-2 border-black sketchy-border card-shadow transition-all group flex flex-col justify-between h-48">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="monospace text-xs px-2 py-0.5 border border-black rounded">LVL 3</span>
+                            <!-- Hand drawn king icon -->
+                            <svg class="w-6 h-6 stroke-black fill-none" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path d="M5 21h14" />
+                                <path d="M12 21V15M10 15h4" />
+                                <path d="M6 15l-1-7h3l1.5 4 2.5-7 2.5 7 1.5-4h3l-1 7H6z" />
+                                <circle cx="12" cy="4" r="1" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-lg handwritten">Positional Play</h3>
+                        <p class="text-xs text-gray-500 mt-1">Advanced pawn storm dynamics, trade tactics, and complex endgame mating sequences.</p>
+                    </div>
+                    <span class="text-xs monospace mt-4 group-hover:underline">Start Lesson →</span>
+                </button>
+            </div>
+
+            <!-- Sketchy Instructions bottom panel -->
+            <div class="border-t-2 border-dashed border-black pt-4 flex flex-col md:flex-row justify-between items-start md:items-center text-xs space-y-2 md:space-y-0 text-gray-500 monospace">
+                <div>Tip: Tap squares on the board to move pieces.</div>
+                <div>Concept-first learning module.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game UI (Blurred initially) -->
+    <div id="main-content" class="w-full max-w-7xl mx-auto flex flex-col space-y-4 blur-sm blur-transition flex-grow">
+        
+        <!-- Header Ribbon -->
+        <header class="flex flex-col md:flex-row justify-between items-center bg-white p-4 border-2 border-black sketchy-border card-shadow rounded-sm space-y-2 md:space-y-0">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl font-bold handwritten">Notion Chess Academy</span>
+                <span class="monospace text-xs px-2 py-0.5 border border-black rounded" id="level-badge">LEVEL 1</span>
+            </div>
+            
+            <!-- Tactic Banner detailing the Enemy AI's Mind -->
+            <div class="flex items-center space-x-2 bg-neutral-100 px-3 py-1.5 border border-black rounded-sm">
+                <span class="text-xs monospace uppercase font-bold text-gray-500">Bot Intelligence:</span>
+                <span id="ai-tactic-name" class="text-xs monospace font-bold text-black italic">The Defensive Wall</span>
+            </div>
+
+            <!-- Action controls -->
+            <div class="flex items-center space-x-2">
+                <button onclick="showWelcomeScreen()" class="sketchy-btn px-3 py-1 text-xs monospace rounded font-bold">
+                    Change Level
+                </button>
+                <button onclick="resetGame()" class="sketchy-btn px-3 py-1 text-xs monospace bg-neutral-900 text-white rounded font-bold">
+                    Reset Board
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dual Panel Grid (Chessboard Left, Learning Stream Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-grow">
+            
+            <!-- CHESSBOARD PANEL (5 cols on LG) -->
+            <div class="lg:col-span-5 flex flex-col justify-between bg-white p-4 md:p-6 border-2 border-black sketchy-border card-shadow rounded-sm h-full">
+                <!-- Top Coordinates (A-H) and Player Status Header -->
+                <div class="flex justify-between items-center mb-3 monospace text-xs border-b border-dashed border-neutral-300 pb-2">
+                    <div class="flex items-center space-x-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-neutral-200 border border-black inline-block"></span>
+                        <span class="font-bold">Opponent (Bot)</span>
+                    </div>
+                    <div id="game-status" class="font-bold handwritten text-sm">Your move</div>
+                </div>
+
+                <!-- Custom Sketchy Chessboard Wrapper -->
+                <div class="relative w-full max-w-[460px] mx-auto border-2 border-black p-1 sketchy-border bg-white shadow-inner">
+                    <!-- Column labels (Files) top -->
+                    <div class="grid grid-cols-8 text-center text-[10px] monospace text-gray-400 py-0.5">
+                        <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span>
+                    </div>
+                    
+                    <!-- Row markers & Chess Grid -->
+                    <div class="flex">
+                        <!-- Left Row labels (Ranks) -->
+                        <div class="flex flex-col justify-around text-[10px] monospace text-gray-400 pr-1 select-none">
+                            <span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                        
+                        <!-- Real Dynamic Grid -->
+                        <div id="board" class="board-grid flex-grow select-none relative">
+                            <!-- Dynamic squares populated by JS -->
+                        </div>
+                        
+                        <!-- Right Row labels (Ranks) -->
+                        <div class="flex flex-col justify-around text-[10px] monospace text-gray-400 pl-1 select-none">
+                            <span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Column labels (Files) bottom -->
+                    <div class="grid grid-cols-8 text-center text-[10px] monospace text-gray-400 py-0.5">
+                        <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Player Status footer -->
+                <div class="flex justify-between items-center mt-3 monospace text-xs border-t border-dashed border-neutral-300 pt-2">
+                    <div class="flex items-center space-x-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-black inline-block"></span>
+                        <span class="font-bold">You (White)</span>
+                    </div>
+                    <div id="move-counter" class="text-gray-500">Moves: 0</div>
+                </div>
+            </div>
+
+            <!-- LEARNING FEED PANEL (7 cols on LG) -->
+            <div class="lg:col-span-7 flex flex-col justify-between bg-white p-4 md:p-6 border-2 border-black sketchy-border card-shadow rounded-sm h-full">
+                <div class="flex flex-col space-y-3 h-full justify-between">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4">
+                            <h2 class="text-xl font-bold handwritten">Interactive Concept Feed</h2>
+                            <span class="monospace text-xs text-gray-400">Updates live each turn</span>
+                        </div>
+
+                        <!-- Scrollable Feed of Horizontal Cards -->
+                        <div id="tutorial-feed" class="space-y-4 max-h-[480px] overflow-y-auto pr-2 pb-4">
+                            <!-- Horizontal Card Template injected here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Sandbox & Interactive Controls -->
+                    <div class="border-t-2 border-dashed border-black pt-4 mt-4 bg-neutral-50 p-4 sketchy-border rounded-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="monospace text-xs font-bold uppercase text-gray-500">Need some guidance?</span>
+                            <span class="text-xs text-neutral-400 monospace">Conceptual Sandbox</span>
+                        </div>
+                        <p class="text-xs text-gray-600 leading-relaxed mb-3">
+                            This panel translates standard chess notation into spatial guidelines. Watch this feed for custom instructions on *every* single move detailing positional targets.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="requestHint()" class="sketchy-btn px-3 py-1 text-xs font-bold monospace rounded">
+                                💡 Suggest Conceptual Move
+                            </button>
+                            <button onclick="explainCurrentBoard()" class="sketchy-btn px-3 py-1 text-xs font-bold monospace rounded bg-white">
+                                🔍 Evaluate Current Position
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Custom Styled Notion Notification Alert Component -->
+        <div id="toast-notification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 max-w-sm bg-white border-2 border-black sketchy-border p-4 card-shadow flex items-start space-x-3">
+            <div class="mt-0.5">
+                <span class="font-bold text-lg">💡</span>
+            </div>
+            <div class="flex-grow">
+                <h4 class="font-bold text-sm monospace" id="toast-title">Academy Note</h4>
+                <p class="text-xs text-gray-600 mt-1 font-serif" id="toast-body">Move registered successfully.</p>
+            </div>
+            <button onclick="dismissToast()" class="text-gray-400 hover:text-black font-bold text-xs monospace">×</button>
+        </div>
+
+    </div>
+
+    <!-- Notion Footer -->
+    <footer class="mt-6 text-center text-xs monospace text-gray-400 max-w-7xl mx-auto w-full py-2 border-t border-dashed border-neutral-300">
+        Created for Notion Workspace integration. Monotone, interactive, responsive chess training system.
+    </footer>
+
+    <script>
+        // Hand-drawn vector representations of chess pieces.
+        // Clean wobbly monochrome strokes tailored perfectly for Notion's sketch vibe.
+        const SVG_PIECES = {
+            'p': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="22.5" cy="14" r="5" />
+                    <path d="M16 20h13M18 20l-3 15h15l-3-15" />
+                    <path d="M12 37c0-2 2-3 4-3h13c2 0 4 1 4 3H12" />
+                  </svg>`,
+            'r': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 12h21M15 12v6h15v-6" />
+                    <path d="M12 12l2 4M33 12l-2 4M15 18l-2 15h19l-2-15" />
+                    <path d="M11 35h23" />
+                    <path d="M9 38h27" />
+                  </svg>`,
+            'n': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M33 37c0-5-3-9-3-9l-2-7c-1-2-3-4-5-4h-3c-3 0-6 2-7 5l-2 4c-1 2-1 5 1 6s5-2 6-3" />
+                    <path d="M13 22l-4 3c-2 2-2 5 0 7s4 1 5-1l4-5" />
+                    <path d="M9 37h27" />
+                    <circle cx="25" cy="14" r="1.5" fill="black" />
+                  </svg>`,
+            'b': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="22.5" cy="10" r="1.5" />
+                    <path d="M15 35c0-4 3-10 7.5-18h0c4.5 8 7.5 14 7.5 18H15z" />
+                    <path d="M22.5 17v12M19 22h7" />
+                    <path d="M12 37h21" />
+                  </svg>`,
+            'q': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="22.5" cy="9" r="1" />
+                    <circle cx="12" cy="14" r="1" />
+                    <circle cx="33" cy="14" r="1" />
+                    <path d="M12 15l4 18h13l4-18l-6 6l-5-14l-5 14z" />
+                    <path d="M11 36h23" />
+                    <path d="M9 39h27" />
+                  </svg>`,
+            'k': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22.5 6v7M19.5 9.5h6" />
+                    <path d="M15 35c0-7 2-18 7.5-18h0c5.5 0 7.5 11 7.5 18H15z" />
+                    <path d="M12 37h21" />
+                    <path d="M9 40h27" />
+                  </svg>`,
+            
+            // White Pieces (Fill them with soft sketchy white base)
+            'P': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22.5 19c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5z" fill="#ffffff" />
+                    <path d="M16 20c-3 0-4 1.5-4 4s1.5 11 4 11h13c2.5 0 4-8.5 4-11s-1-4-4-4H16z" fill="#ffffff" />
+                    <path d="M12 37c0-2 2-3 4-3h13c2 0 4 1 4 3H12" fill="#ffffff" />
+                  </svg>`,
+            'R': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 12h21v6H12z" fill="#ffffff" />
+                    <path d="M15 18l-3 17h21l-3-17H15z" fill="#ffffff" />
+                    <path d="M9 38h27" />
+                  </svg>`,
+            'N': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M33 37c0-5-3-9-3-9l-2-7c-1-2-3-4-5-4h-3c-3 0-6 2-7 5l-2 4c-1 2-1 5 1 6s5-2 6-3" fill="#ffffff" />
+                    <path d="M13 22l-4 3c-2 2-2 5 0 7s4 1 5-1l4-5" fill="#ffffff" />
+                    <path d="M9 37h27" />
+                    <circle cx="25" cy="14" r="1.5" fill="black" />
+                  </svg>`,
+            'B': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="22.5" cy="10" r="1.5" />
+                    <path d="M15 35c0-4 3-10 7.5-18h0c4.5 8 7.5 14 7.5 18H15z" fill="#ffffff" />
+                    <path d="M22.5 17v12M19 22h7" />
+                    <path d="M12 37h21" />
+                  </svg>`,
+            'Q': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="22.5" cy="9" r="1" />
+                    <circle cx="12" cy="14" r="1" />
+                    <circle cx="33" cy="14" r="1" />
+                    <path d="M12 15l4 18h13l4-18l-6 6l-5-14l-5 14z" fill="#ffffff" />
+                    <path d="M11 36h23" fill="#ffffff" />
+                    <path d="M9 39h27" />
+                  </svg>`,
+            'K': `<svg viewBox="0 0 45 45" class="w-full h-full sketchy-piece stroke-black fill-none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22.5 6v7M19.5 9.5h6" />
+                    <path d="M15 35c0-7 2-18 7.5-18h0c5.5 0 7.5 11 7.5 18H15z" fill="#ffffff" />
+                    <path d="M12 37h21" />
+                    <path d="M9 40h27" />
+                  </svg>`
+        };
+
+        // Main Game Variables
+        let game = new Chess();
+        let selectedSquare = null;
+        let activeLevel = 1;
+        let aiPersonality = null;
+        let totalMovesCounter = 0;
+
+        // Custom Adaptive bot AI tactics & setup
+        const PERSONALITIES = [
+            {
+                name: "The Aggressive Gambiter",
+                description: "This tactics-first AI values rapid piece activation and attacking vectors on your king, occasionally neglecting static pawn positions to draw you into tactical combat.",
+                pawnTable: [
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+                    [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
+                    [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
+                    [0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5],
+                    [0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
+                    [0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5],
+                    [0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5],
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
+                ],
+                aggressiveness: 1.5,
+                dangerFactor: 1.2
+            },
+            {
+                name: "The Defensive Wall",
+                description: "A highly resilient bot focused on king-safety, dense pawn chains, and gradual positional constriction. Rare tactical openings are heavily secured.",
+                pawnTable: [
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+                    [6.0,  6.0,  6.0,  6.0,  6.0,  6.0,  6.0,  6.0],
+                    [2.0,  2.0,  3.0,  4.0,  4.0,  3.0,  2.0,  2.0],
+                    [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
+                    [0.5,  0.5,  1.5,  2.5,  2.5,  1.5,  0.5,  0.5],
+                    [0.5,  0.5,  1.0,  1.0,  1.0,  1.0,  0.5,  0.5],
+                    [1.0,  1.0,  1.0, -1.0, -1.0,  1.0,  1.0,  1.0],
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
+                ],
+                aggressiveness: 0.6,
+                dangerFactor: 0.8
+            },
+            {
+                name: "The Sneaky Tactician",
+                description: "This engine thrives on indirect pins, devious forks, and queen deployment traps. Watch out for coordinates that look innocent but setup major traps.",
+                pawnTable: [
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
+                    [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
+                    [1.0,  1.0,  1.5,  2.5,  2.5,  1.5,  1.0,  1.0],
+                    [0.0,  0.0,  1.0,  2.0,  2.0,  1.0,  0.0,  0.0],
+                    [0.5,  0.0,  0.5,  1.5,  1.5,  0.5,  0.0,  0.5],
+                    [0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5],
+                    [0.5,  1.0,  1.0, -2.0, -2.0,  1.0,  1.0,  0.5],
+                    [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
+                ],
+                aggressiveness: 1.1,
+                dangerFactor: 1.4
+            }
+        ];
+
+        // Dynamic Concept Feed Database
+        const DYNAMIC_TUTORIALS = {
+            1: [
+                {
+                    trigger: 0,
+                    title: "Opening Principle: Central Control",
+                    subtitle: "Control the Squares e4, d4, e5, d5",
+                    icon: "🎯",
+                    description: "Before you make your first move, look at the center of the board. In level 1, your core goal is pushing your e or d pawns forward. This stakes a claim in the center and unleashes your bishops.",
+                    variations: ["Variation A: King's Pawn (e4) - Highly recommended. Direct, dynamic.", "Variation B: Queen's Pawn (d4) - Leads to closed, deeply strategic games."]
+                },
+                {
+                    trigger: 1,
+                    title: "Developing Your Knights",
+                    subtitle: "Develop minor pieces toward the center",
+                    icon: "🐴",
+                    description: "Excellent initial push. Now, develop your Knight (usually to f3 or c3). Knights on the rim are dim—keep them aimed at the central squares so they control the battlefield.",
+                    variations: ["Variation A: Nf3 - Attacks e5, prepares Kingside castling.", "Variation B: Nc3 - Defends e4, controls d5."]
+                },
+                {
+                    trigger: 2,
+                    title: "The Bishop's Path",
+                    subtitle: "Clear the way for your Light-Squared Bishop",
+                    icon: "⛪",
+                    description: "Your knights are active! Now, find an open diagonal for your bishop. If you moved e4, your light-squared bishop can leap to Bc4 or Bb5, putting immense pressure on f7.",
+                    variations: ["Variation A: Bishop to c4 (Italian Game) - Targets the vulnerable f7 pawn.", "Variation B: Bishop to b5 (Ruy Lopez) - Pressures the knight defending e5."]
+                },
+                {
+                    trigger: 3,
+                    title: "King Safety: Castling",
+                    subtitle: "Get your King into safety early",
+                    icon: "🛡️",
+                    description: "With your bishop and knight active, you can perform 'Castling' (Kg1 and Rf1). This hides your king in a secure corner behind a fortress of three pawns, whilst bringing your rook to the fight.",
+                    variations: ["Castling Kingside: Short and fast.", "Castling Queenside: Active rook but takes longer."]
+                }
+            ],
+            2: [
+                {
+                    trigger: 0,
+                    title: "Tactical Thinking: Pins and Skewers",
+                    subtitle: "Exploit geometric alignments",
+                    icon: "📍",
+                    description: "In Level 2, tactics dominate. A 'Pin' happens when an enemy piece cannot move because doing so would expose a more valuable piece behind it. Look for alignments along lines and diagonals.",
+                    variations: ["Relative Pin: Exposes a stronger piece.", "Absolute Pin: Exposes the King (illegal to move)."]
+                },
+                {
+                    trigger: 1,
+                    title: "The Power of the Fork",
+                    subtitle: "Attack two elements simultaneously",
+                    icon: "🍴",
+                    description: "Knights and Pawns are excellent forkers because of their unique movements. If you can land a piece on a square attacking both King/Queen and a Rook, your opponent will face inevitable loss.",
+                    variations: ["Knight Fork on c7: Often grabs the rook.", "Pawn Fork: Forcing trade of high pieces for a cheap pawn."]
+                },
+                {
+                    trigger: 2,
+                    title: "Discovered Attacks",
+                    subtitle: "Unleash hidden lines of fire",
+                    icon: "⚡",
+                    description: "By moving one of your pieces, you open up the path of a bishop or rook behind it, creating a surprise attack. This is a highly effective way to win pieces.",
+                    variations: ["Discovered Check: Devastating because king must move first."]
+                }
+            ],
+            3: [
+                {
+                    trigger: 0,
+                    title: "Positional Strategy: Pawn Structure",
+                    subtitle: "Creating permanent structural weaknesses",
+                    icon: "🧱",
+                    description: "In advanced play, games are won on long-term weaknesses. Look for 'doubled pawns' (pawns on the same file) or 'isolated pawns' (no friendly pawns beside them) in the enemy camp.",
+                    variations: ["Backward Pawn: A pawn that cannot be advanced safely.", "Pawn Island: Fewer islands are generally superior."]
+                },
+                {
+                    trigger: 1,
+                    title: "The Outpost Knight",
+                    subtitle: "Planting pieces in enemy territory",
+                    icon: "🏰",
+                    description: "Look for squares in your opponent's half that cannot be attacked by enemy pawns. Placing a knight on such an 'outpost' square (e.g., d5 or e5) turns it into a powerful tactical monster.",
+                    variations: ["The f5 Outpost: Pressuring the enemy castle directly."]
+                },
+                {
+                    trigger: 2,
+                    title: "Positional Sacrifices",
+                    subtitle: "Give material for lasting tactical advantages",
+                    icon: "💥",
+                    description: "Sometimes, sacrificing an exchange (giving a Rook for a Knight or Bishop) destroys your enemy's coordination, giving you a winning advantage in active space.",
+                    variations: ["Greek Gift: Bishop sacrifice on h7 for king expose."]
+                }
+            ]
+        };
+
+        window.onload = function () {
+            initializeBoard();
+            showWelcomeScreen();
+            
+            // Listen to screen resize for fluid canvas/grid adjustments
+            window.addEventListener('resize', handleResize);
+        }
+
+        // Handle adaptive screen elements if needed
+        function handleResize() {
+            // Chessboard holds itself via CSS aspect-ratio
+        }
+
+        // Set state for level selected
+        function selectLevel(levelNum) {
+            activeLevel = levelNum;
+            document.getElementById('level-badge').innerText = `LEVEL ${levelNum}`;
+            
+            // Assign random AI Tactic/Personality for this level run
+            const randomTactic = PERSONALITIES[Math.floor(Math.random() * PERSONALITIES.length)];
+            aiPersonality = randomTactic;
+            
+            document.getElementById('ai-tactic-name').innerText = randomTactic.name;
+            
+            // Close modal with style
+            document.getElementById('welcome-modal').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('blur-sm');
+
+            // Reset engine with the selected configuration
+            resetGame();
+
+            showToast("Lesson Initialized", `Welcome to Level ${levelNum}! You are playing against "${randomTactic.name}".`);
+        }
+
+        function showWelcomeScreen() {
+            document.getElementById('welcome-modal').classList.remove('hidden');
+            document.getElementById('main-content').classList.add('blur-sm');
+        }
+
+        // Render Board logic
+        function initializeBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const squareDiv = document.createElement('div');
+                    const isDark = (row + col) % 2 === 1;
+                    const file = String.fromCharCode(97 + col);
+                    const rank = 8 - row;
+                    const squareCoord = `${file}${rank}`;
+
+                    squareDiv.id = `sq-${squareCoord}`;
+                    squareDiv.className = `w-full h-full relative flex items-center justify-center cursor-pointer transition-all duration-150 ${isDark ? 'square-dark' : 'square-light'}`;
+                    
+                    // Add click action
+                    squareDiv.addEventListener('click', () => handleSquareClick(squareCoord));
+                    
+                    boardEl.appendChild(squareDiv);
+                }
+            }
+            updateBoardDisplay();
+        }
+
+        function updateBoardDisplay() {
+            const boardState = game.board();
+            
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const file = String.fromCharCode(97 + col);
+                    const rank = 8 - row;
+                    const squareCoord = `${file}${rank}`;
+                    const squareDiv = document.getElementById(`sq-${squareCoord}`);
+                    
+                    // Clear previous highlights or items (preserve helper classes)
+                    squareDiv.innerHTML = '';
+                    squareDiv.classList.remove('square-selected');
+                    squareDiv.classList.remove('square-dest');
+
+                    const piece = boardState[row][col];
+                    if (piece) {
+                        // Generate hand-drawn monochrome piece SVG
+                        const pieceSymbol = piece.color === 'w' ? piece.type.toUpperCase() : piece.type.toLowerCase();
+                        const pieceSvg = SVG_PIECES[pieceSymbol];
+                        if (pieceSvg) {
+                            squareDiv.innerHTML = `<div class="w-[82%] h-[82%] flex items-center justify-center transform active:scale-95 transition-transform duration-75">${pieceSvg}</div>`;
+                        }
+                    }
+                }
+            }
+
+            // Highlight selected square if active
+            if (selectedSquare) {
+                const selDiv = document.getElementById(`sq-${selectedSquare}`);
+                if (selDiv) selDiv.classList.add('square-selected');
+
+                // Display eligible landing/destination markers
+                const moves = game.moves({ square: selectedSquare, verbose: true });
+                moves.forEach(m => {
+                    const destDiv = document.getElementById(`sq-${m.to}`);
+                    if (destDiv) destDiv.classList.add('square-dest');
+                });
+            }
+        }
+
+        // Square clicked event handling
+        function handleSquareClick(square) {
+            if (game.game_over()) {
+                showToast("Game Finished", "This lesson matches is over. Reset the board to try again.");
+                return;
+            }
+
+            // Don't allow clicking while computer's turn
+            if (game.turn() === 'b') {
+                return;
+            }
+
+            const clickedPiece = game.get(square);
+
+            if (selectedSquare === square) {
+                // Clicking same square cancels choice
+                selectedSquare = null;
+                updateBoardDisplay();
+                return;
+            }
+
+            // If a friendly piece was clicked, select it immediately
+            if (clickedPiece && clickedPiece.color === 'w') {
+                selectedSquare = square;
+                updateBoardDisplay();
+                return;
+            }
+
+            // Attempt to perform a movement
+            if (selectedSquare) {
+                const moves = game.moves({ square: selectedSquare, verbose: true });
+                const validMove = moves.find(m => m.to === square);
+
+                if (validMove) {
+                    // Try to execute movement
+                    const moveResult = game.move({
+                        from: selectedSquare,
+                        to: square,
+                        promotion: 'q' // Auto promote to Queen for simplicity
+                    });
+
+                    if (moveResult) {
+                        selectedSquare = null;
+                        totalMovesCounter++;
+                        document.getElementById('move-counter').innerText = `Moves: ${totalMovesCounter}`;
+                        
+                        updateBoardDisplay();
+                        
+                        // Populate interactive card before opponent reacts
+                        generateConceptCardForMove(totalMovesCounter, moveResult);
+
+                        // Trigger bot response after a brief delay
+                        document.getElementById('game-status').innerText = "Bot is thinking...";
+                        setTimeout(triggerBotMove, 800);
+                    }
+                } else {
+                    // Invalid destination, clear selection
+                    selectedSquare = null;
+                    updateBoardDisplay();
+                }
+            }
+        }
+
+        // Enemy Adaptive AI Tactic Logic
+        function triggerBotMove() {
+            if (game.game_over()) {
+                handleGameOverState();
+                return;
+            }
+
+            const aiMove = computeBestMove();
+            if (aiMove) {
+                game.move(aiMove);
+                updateBoardDisplay();
+                document.getElementById('game-status').innerText = "Your move";
+
+                // Readjust game status text if check
+                if (game.in_check()) {
+                    document.getElementById('game-status').innerText = "Check!";
+                    showToast("⚠️ Under Attack", "Your king is checked. Block the attack, capture the attacker, or move away!");
+                }
+            }
+
+            if (game.game_over()) {
+                handleGameOverState();
+            }
+        }
+
+        // Positional Evaluation Tables for Basic AI search
+        const pieceValues = { p: 10, r: 50, n: 30, b: 30, q: 90, k: 9000 };
+
+        // Simple Minimax search algorithm with positional weight tweaks based on level and selected personality
+        function computeBestMove() {
+            const possibleMoves = game.moves({ verbose: true });
+            if (possibleMoves.length === 0) return null;
+
+            // Introduce occasional variation/randomness to simulate "human-like" tactic changes
+            if (Math.random() < 0.15) {
+                return possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            }
+
+            let bestMove = null;
+            let bestValue = -999999;
+
+            // Simple 2-ply search (evaluates optimal replies)
+            for (let i = 0; i < possibleMoves.length; i++) {
+                const move = possibleMoves[i];
+                game.move(move);
+                
+                let boardVal = evaluateBoard();
+                // If checking the opponent, boost weight depending on tactic
+                if (game.in_check()) {
+                    boardVal += (5 * (aiPersonality ? aiPersonality.dangerFactor : 1));
+                }
+
+                // Opponent counter-move analysis
+                let worstOpponentReply = 999999;
+                const replies = game.moves({ verbose: true });
+                for (let j = 0; j < replies.length; j++) {
+                    game.move(replies[j]);
+                    const oppVal = evaluateBoard();
+                    if (oppVal < worstOpponentReply) worstOpponentReply = oppVal;
+                    game.undo();
+                }
+
+                game.undo();
+
+                // If no replies, opponent is in checkmate or stalemate
+                const netValue = replies.length === 0 ? boardVal + 10000 : boardVal - worstOpponentReply;
+
+                if (netValue > bestValue) {
+                    bestValue = netValue;
+                    bestMove = move;
+                }
+            }
+
+            return bestMove || possibleMoves[0];
+        }
+
+        function evaluateBoard() {
+            const board = game.board();
+            let score = 0;
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const cell = board[r][c];
+                    if (cell) {
+                        let val = pieceValues[cell.type];
+                        
+                        // Apply personality bias to specific piece roles
+                        if (aiPersonality) {
+                            if (cell.type === 'p') {
+                                // Add value based on chosen pawn table
+                                val += aiPersonality.pawnTable[r][c];
+                            }
+                            if (cell.type === 'q' && aiPersonality.name === "The Sneaky Tactician") {
+                                val += 5; // Queens are valued slightly higher to encourage queen activity
+                            }
+                        }
+
+                        // Positive score for bot (Black), negative for player (White)
+                        if (cell.color === 'b') {
+                            score += val;
+                        } else {
+                            score -= val;
+                        }
+                    }
+                }
+            }
+            return score;
+        }
+
+        // Construct Interactive Feed Cards dynamically
+        function generateConceptCardForMove(moveIndex, playerMoveObj) {
+            const feedEl = document.getElementById('tutorial-feed');
+            
+            // Determine which tutorial deck is active
+            const deck = DYNAMIC_TUTORIALS[activeLevel] || DYNAMIC_TUTORIALS[1];
+            
+            // Match based on move turn, fallback to a looping concept card
+            let cardData = deck.find(c => c.trigger === moveIndex);
+            
+            // If no specific card is triggered, generate a context-aware strategy card based on player move
+            if (!cardData) {
+                cardData = generateContextAwareCard(playerMoveObj);
+            }
+
+            // Create horizontal hand-drawn styled card structure
+            const cardMarkup = `
+                <div class="bg-white border-2 border-black p-4 sketchy-border card-shadow transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="flex items-start space-x-3">
+                        <div class="text-3xl p-1 bg-neutral-100 rounded border border-black inline-block">
+                            ${cardData.icon}
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-1">
+                                <h3 class="font-bold text-lg handwritten text-black">${cardData.title}</h3>
+                                <span class="monospace text-[10px] bg-black text-white px-2 py-0.5 rounded">Move ${moveIndex} Concept</span>
+                            </div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider monospace text-gray-400 mb-2">${cardData.subtitle}</h4>
+                            <p class="text-sm text-gray-700 font-serif leading-relaxed mb-3">
+                                ${cardData.description}
+                            </p>
+                            <div class="border-t border-dashed border-neutral-300 pt-3">
+                                <span class="monospace text-xs font-bold text-gray-500 block mb-1">💡 Suggested Variations to test:</span>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    ${cardData.variations.map(v => `<li class="text-xs text-gray-600 font-serif">${v}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Insert at the top of the stream so player sees newest move on top
+            feedEl.insertAdjacentHTML('afterbegin', cardMarkup);
+            feedEl.scrollTop = 0;
+        }
+
+        // Generate contextual conceptual card when database trigger ends
+        function generateContextAwareCard(moveObj) {
+            const pieceNames = { p: 'Pawn', r: 'Rook', n: 'Knight', b: 'Bishop', q: 'Queen', k: 'King' };
+            const fromSq = moveObj.from.toUpperCase();
+            const toSq = moveObj.to.toUpperCase();
+            const pieceName = pieceNames[moveObj.piece];
+
+            let title = `Strategic Move: ${pieceName} to ${toSq}`;
+            let subtitle = "Positional Readjustment";
+            let description = `You moved your ${pieceName} from ${fromSq} to ${toSq}. This reshapes your spatial coordination. Evaluate how this square affects your central coverage and pawn structures. Remember, every move weakens the square your piece just left behind.`;
+            let icon = "♟️";
+            let variations = [
+                "Consider structural reinforcement of this piece.",
+                "Ensure diagonals behind this piece remain guarded from enemy counters."
+            ];
+
+            if (moveObj.captured) {
+                const capturedPieceName = pieceNames[moveObj.captured];
+                title = `Tactical Capture: ${pieceName} takes ${capturedPieceName}`;
+                subtitle = "Material Exchange & Trade Assessment";
+                icon = "⚔️";
+                description = `Brilliant! Your ${pieceName} on ${fromSq} successfully captured the enemy ${capturedPieceName} on ${toSq}. Think carefully about this trade: Was it an even exchange, or did you gain material superiority? Analyze if this capture opened up any attack vectors for your opponent's long-range bishops.`;
+                variations = [
+                    "Check if the capturing piece is now unprotected ('hanging').",
+                    "Scan for adjacent enemy forks that might arise from this open space."
+                ];
+            } else if (moveObj.piece === 'p') {
+                title = `Pawn Push: Advancing the Frontline`;
+                subtitle = "Pawn Chains and Space Control";
+                icon = "🧱";
+                description = `You advanced your pawn to ${toSq}. Pawns cannot move backwards—this choice is permanent. You have claimed spatial leverage but left weaknesses in adjacent squares (outposts for opponent knights).`;
+                variations = [
+                    "Form a strong diagonal pawn chain to block enemy bishop vectors.",
+                    "Look for opportunities to execute pawn breaks to open files."
+                ];
+            } else if (moveObj.piece === 'k') {
+                title = `King Position: Defense and Outposts`;
+                subtitle = "Guarding the Sovereign";
+                icon = "👑";
+                description = `You adjusted your King's coordinate to ${toSq}. In the middle game, active King positions are generally highly vulnerable. Keep your king secured until late endgame, where it transforms into an active fighting unit.`;
+                variations = [
+                    "Prepare shelter pawns in front of the king.",
+                    "Keep rooks joined along the bottom rank to support escape coordinates."
+                ];
+            }
+
+            return { title, subtitle, icon, description, variations };
+        }
+
+        // Suggest conceptual move
+        function requestHint() {
+            const moves = game.moves({ verbose: true });
+            if (moves.length === 0) return;
+
+            // Simple search to suggest top tactical move
+            let bestHint = moves[0];
+            let maxScore = -99999;
+            
+            moves.forEach(m => {
+                let score = 0;
+                if (m.captured) score += 10;
+                if (m.piece === 'n' || m.piece === 'b') score += 2; // minor piece development
+                if (m.san.includes('+')) score += 5; // checks are active
+                
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestHint = m;
+                }
+            });
+
+            showToast("Conceptual Hint", `The academy recommends exploring the move: ${bestHint.san} (${bestHint.from.toUpperCase()} to ${bestHint.to.toUpperCase()}). Try assessing its impact!`);
+        }
+
+        // Dynamic Position Evaluation
+        function explainCurrentBoard() {
+            const evaluation = evaluateBoard();
+            let analysis = "";
+
+            if (evaluation === 0) {
+                analysis = "The position is dynamically balanced. Material is completely equal. Focus on piece activity.";
+            } else if (evaluation < 0) {
+                analysis = "You have positional or material superiority! Leverage your spatial advantage and force trades to simplify.";
+            } else {
+                analysis = "The opponent holds a positional edge. Tighten your defenses, coordinate your knights, and watch for forks.";
+            }
+
+            showToast("Strategic Assessment", analysis);
+        }
+
+        // Game Over modal handlers
+        function handleGameOverState() {
+            let title = "Match Over";
+            let msg = "The game ended in a draw or stalemate.";
+
+            if (game.in_checkmate()) {
+                if (game.turn() === 'b') {
+                    title = "🎉 Victory!";
+                    msg = "Splendid job! You delivered a checkmate and successfully applied the concepts.";
+                } else {
+                    title = "💀 Defeat";
+                    msg = "Checkmate! The computer caught you in a tactical pin. Try resetting to try again.";
+                }
+            }
+
+            showToast(title, msg);
+            document.getElementById('game-status').innerText = title;
+        }
+
+        // Reset game to fresh state
+        function resetGame() {
+            game = new Chess();
+            selectedSquare = null;
+            totalMovesCounter = 0;
+            document.getElementById('move-counter').innerText = `Moves: 0`;
+            document.getElementById('game-status').innerText = "Your move";
+            
+            // Clear current cards feed
+            document.getElementById('tutorial-feed').innerHTML = '';
+
+            // Render basic first concept card
+            generateConceptCardForMove(0, { from: '?', to: '?', piece: 'p' });
+
+            initializeBoard();
+        }
+
+        // Custom Toast Engine
+        function showToast(title, message) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-body').innerText = message;
+
+            // Animate toast entry
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            
+            // Auto dismiss after 6 seconds
+            setTimeout(dismissToast, 6000);
+        }
+
+        function dismissToast() {
+            const toast = document.getElementById('toast-notification');
+            toast.classList.add('translate-y-24', 'opacity-0');
+        }
+    </script>
+</body>
+</html>
