@@ -3,526 +3,723 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akasha Economic Simulator</title>
-    <!-- Importing Genshin-like elegant fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Modern Dashboard - Economic Simulator</title>
+    <!-- Modern Sans-serif font matching the video's clean aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Genshin Impact Core Theme Colors */
-            --bg-color: #1a1e29;
-            --panel-bg: rgba(30, 36, 50, 0.75);
-            --panel-border: #d4af37;
-            --gold-light: #fcd34d;
-            --gold-dark: #b48608;
-            --text-main: #faf5eb;
-            --text-muted: #a1a1aa;
-            --highlight: #60a5fa;
-
-            /* Dynamic City Animation Variables (Default State) */
-            --sky-top: #1e3a8a;
-            --sky-bottom: #7dd3fc;
-            --sun-y: 100px;
-            --sun-color: #fde047;
-            --sun-glow: rgba(253, 224, 71, 0.5);
-            --moon-opacity: 0;
-            --star-opacity: 0;
-            --cloud-color: #ffffff;
-            --cloud-opacity: 0.8;
-            --mountain-color: #475569;
-            --build-bg: #334155;
-            --build-fg: #1e293b;
-            --window-color: #fde047;
-            --window-glow: 0 0 10px rgba(253, 224, 71, 0.6);
-            --pollution-opacity: 0;
-            --pollution-color: #854d0e;
+            /* Dashboard Core Colors */
+            --bg-body: #ececf1;
+            --bg-sidebar: #111111;
+            --bg-panel-dark: #18181b;
+            --bg-panel-light: #ffffff;
+            --text-light: #ffffff;
+            --text-dark: #1f2937;
+            --text-muted: #9ca3af;
+            --border-color: #27272a;
+            
+            /* Accent Colors */
+            --accent-orange: #f97316;
+            --accent-orange-light: #fdba74;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            
+            /* Dynamic State Colors (Default) */
+            --state-bg-1: #ff7e5f;
+            --state-bg-2: #feb47b;
+            --city-block-main: #ffffff;
+            --city-block-shadow: rgba(0, 0, 0, 0.2);
+            --wave-opacity: 0.8;
+            
+            /* Graph Colors */
+            --bar-bg: #27272a;
+            --bar-fill: #3f3f46;
+            --bar-hover: #52525b;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
             user-select: none;
         }
 
         body {
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(circle at top right, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at bottom left, rgba(180, 134, 8, 0.1) 0%, transparent 50%);
-            color: var(--text-main);
-            font-family: 'Nunito', sans-serif;
-            min-height: 100vh;
+            background-color: var(--bg-body);
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            overflow-x: hidden;
         }
 
-        /* Widget Container */
-        .widget-container {
+        /* Main App Container */
+        .app-container {
             width: 100%;
-            max-width: 900px;
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.4);
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 
-                        inset 0 0 20px rgba(212, 175, 55, 0.1);
-            position: relative;
+            max-width: 1200px;
+            height: 800px;
+            background-color: var(--bg-panel-light);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 80px;
+            background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            padding: 30px;
+            align-items: center;
+            padding: 30px 0;
+            z-index: 10;
         }
 
-        /* Elaborate Corner Decorations */
-        .widget-container::before, .widget-container::after {
-            content: '✦';
-            position: absolute;
-            color: var(--gold-light);
-            font-size: 24px;
-            opacity: 0.8;
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="%23ffffff" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>') no-repeat center;
+            margin-bottom: 40px;
         }
-        .widget-container::before { top: 10px; left: 15px; }
-        .widget-container::after { top: 10px; right: 15px; }
 
-        .corner-bottom-left, .corner-bottom-right {
-            position: absolute;
-            color: var(--gold-light);
-            font-size: 24px;
-            opacity: 0.8;
-            bottom: 10px;
+        .nav-icons {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            flex: 1;
         }
-        .corner-bottom-left { left: 15px; }
-        .corner-bottom-right { right: 15px; }
 
-        /* Header Styling */
-        header {
-            text-align: center;
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.5;
+            transition: opacity 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-icon:hover, .nav-icon.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        /* SVG Icons Data URIs for Nav */
+        .ic-calendar { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>') center/cover; }
+        .ic-grid { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>') center/cover; }
+        .ic-folder { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>') center/cover; }
+        .ic-settings { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>') center/cover; }
+
+        .avatars {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #333;
+            border: 2px solid var(--bg-sidebar);
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .add-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--accent-pink);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .add-btn:hover { transform: scale(1.1); }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background-color: #333;
+            border-radius: 12px;
+            margin-top: 20px;
             position: relative;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            cursor: pointer;
         }
 
-        h1 {
-            font-family: 'Cinzel', serif;
+        .toggle-knob {
+            width: 18px;
+            height: 18px;
+            background-color: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+        }
+
+        /* Main Dashboard Area */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            grid-template-rows: auto 1fr;
+            padding: 30px;
+            gap: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* Header Section */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .header-title {
             font-size: 2rem;
-            color: var(--gold-light);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 0 15px rgba(252, 211, 77, 0.3);
+            font-weight: 700;
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
             gap: 15px;
         }
 
-        h1::before, h1::after {
-            content: '';
-            display: block;
-            width: 50px;
-            height: 2px;
-            background: linear-gradient(to right, transparent, var(--gold-light), transparent);
-        }
-
-        .subtitle {
+        .btn-pill {
+            padding: 10px 20px;
+            border-radius: 20px;
             font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
         }
 
-        /* City Display SVG Area */
-        .city-view-wrapper {
+        .btn-primary { background: #fff; color: var(--text-dark); border: 1px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-accent { background: #fef08a; color: #854d0e; }
+
+        /* Left Column (City Graphic Card) */
+        .city-card {
+            background: linear-gradient(135deg, var(--state-bg-1), var(--state-bg-2));
+            border-radius: 24px;
             position: relative;
-            width: 100%;
-            height: 250px;
-            border-radius: 8px;
-            border: 2px solid rgba(212, 175, 55, 0.5);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             overflow: hidden;
-            background: #000;
-        }
-
-        .city-svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* SVG Dynamic Transitions */
-        .sky-grad-top, .sky-grad-bottom, 
-        .sun-moon, .mountain, 
-        .building-bg, .building-fg, 
-        .window, .cloud, .pollution-layer {
-            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Animations */
-        @keyframes drift {
-            0% { transform: translateX(-5%); }
-            50% { transform: translateX(5%); }
-            100% { transform: translateX(-5%); }
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.2; }
-            50% { opacity: 1; }
-        }
-
-        .cloud-group { animation: drift 20s infinite ease-in-out; }
-        .star { animation: twinkle 3s infinite ease-in-out; }
-        .star:nth-child(even) { animation-duration: 4s; animation-delay: 1s; }
-
-        /* State Info Panel */
-        .state-panel {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 6px;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            min-height: 120px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            transition: background 1s ease;
+        }
+
+        .city-header {
+            padding: 30px;
+            position: relative;
+            z-index: 2;
+            color: #fff;
+        }
+
+        .state-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            font-weight: 600;
         }
 
         .state-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1.5rem;
-            color: var(--gold-light);
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-            transition: color 0.5s;
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
 
         .state-desc {
-            font-size: 0.95rem;
+            font-size: 1rem;
+            opacity: 0.95;
+            max-width: 80%;
             line-height: 1.5;
-            color: var(--text-main);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* Controls Section */
-        .controls-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 10px;
+        /* Abstract Wavy Background Graphics */
+        .abstract-waves {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
         }
 
-        /* Interactive Card */
-        .control-card {
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 8px;
-            padding: 20px;
+        .wave-path {
+            fill: none;
+            stroke: rgba(255, 255, 255, var(--wave-opacity));
+            stroke-width: 40;
+            transition: all 1s ease;
+        }
+
+        /* Flat Modern City Block Graphics */
+        .city-blocks-container {
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            z-index: 2;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 0 20px;
+        }
+
+        .city-block {
+            background-color: var(--city-block-main);
+            border-radius: 8px 8px 0 0;
+            box-shadow: -10px 0 20px var(--city-block-shadow);
+            transition: all 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .b1 { width: 12%; height: 60%; }
+        .b2 { width: 18%; height: 90%; }
+        .b3 { width: 15%; height: 40%; }
+        .b4 { width: 22%; height: 100%; }
+        .b5 { width: 14%; height: 75%; }
+
+        .block-window {
+            background: rgba(0, 0, 0, 0.1);
+            width: 40%;
+            height: 10px;
+            margin: 15px auto;
+            border-radius: 4px;
+        }
+
+        /* Right Column Container */
+        .right-column {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            position: relative;
-            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            gap: 20px;
         }
 
-        .control-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--gold-light);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
+        /* Info Widget (Like the checklist in the video) */
+        .info-widget {
+            background: #fff;
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            flex: 0.8;
         }
 
-        .card-icon {
-            font-size: 24px;
-            color: var(--gold-light);
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(252, 211, 77, 0.5);
-        }
-
-        .card-title {
-            font-family: 'Cinzel', serif;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            text-align: center;
-        }
-
-        .card-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--gold-light);
+        .info-header {
+            font-size: 0.9rem;
+            color: var(--text-muted);
             margin-bottom: 15px;
-            text-shadow: 0 0 10px rgba(252, 211, 77, 0.3);
-            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
-        /* Custom Slider (Genshin Style) */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
+        .info-list {
+            list-style: none;
         }
 
-        input[type=range]:focus {
-            outline: none;
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-dark);
         }
 
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            height: 20px;
+        .checkbox {
             width: 20px;
-            border-radius: 50%;
-            background: var(--gold-light);
-            cursor: pointer;
-            -webkit-appearance: none;
-            margin-top: -8px;
-            box-shadow: 0 0 10px var(--gold-light), inset 0 0 5px #fff;
-            border: 2px solid #fff;
-            transform: rotate(45deg); /* Diamond shape */
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        input[type=range]::-webkit-slider-thumb:hover {
-            transform: rotate(45deg) scale(1.2);
-            box-shadow: 0 0 15px var(--gold-light), inset 0 0 8px #fff;
-        }
-
-        input[type=range]::-moz-range-track {
-            width: 100%;
-            height: 6px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        input[type=range]::-moz-range-thumb {
             height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: var(--gold-light);
-            cursor: pointer;
-            box-shadow: 0 0 10px var(--gold-light), inset 0 0 5px #fff;
-            border: 2px solid #fff;
-            transform: rotate(45deg);
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .controls-container {
-                grid-template-columns: 1fr;
-            }
-            .widget-container {
-                padding: 20px;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
+        .checkbox.checked {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
         }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Bottom Control Panel (The Transformative Feedback Graph) */
+        .graph-widget {
+            background-color: var(--bg-panel-dark);
+            border-radius: 24px;
+            padding: 30px;
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            grid-column: 1 / -1; /* Stretch across bottom if we change layout, but here it's in right col */
+        }
+        
+        /* Make graph widget span bottom of BOTH columns */
+        .bottom-row {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 20px;
+            height: 300px;
+        }
+
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .graph-title {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .graph-subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .graph-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .graph-icon svg { width: 16px; height: 16px; stroke: #fff; }
+
+        /* The Interactive Chart Area */
+        .chart-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-left: 40px; /* Room for Y axis */
+            padding-top: 20px;
+        }
+
+        /* Y Axis Labels */
+        .y-axis {
+            position: absolute;
+            left: 0;
+            top: 20px;
+            bottom: 0;
+            width: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Horizontal Grid Lines */
+        .grid-lines {
+            position: absolute;
+            left: 40px;
+            right: 0;
+            top: 20px;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .grid-line {
+            width: 100%;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.1) 50%, transparent 50%);
+            background-size: 8px 1px;
+        }
+
+        /* Interactive Bars */
+        .bar-container {
+            width: 25%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 5;
+            cursor: ns-resize;
+            group: target;
+        }
+
+        .bar-track {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .bar-fill {
+            width: 60px;
+            height: 50%; /* Dynamic */
+            background-color: var(--bar-fill);
+            border-radius: 8px 8px 4px 4px;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* X Axis Labels */
+        .x-label {
+            position: absolute;
+            bottom: -25px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
+            white-space: nowrap;
+        }
+
+        /* Warping / Interactive Feedback State (Like the video) */
+        .bar-container.active .bar-fill, .bar-container:hover .bar-fill {
+            transform: scaleX(1.15) scaleY(1.02);
+            /* Transformative wavy/striped pattern */
+            background: repeating-linear-gradient(
+                45deg,
+                var(--accent-orange),
+                var(--accent-orange) 10px,
+                var(--accent-orange-light) 10px,
+                var(--accent-orange-light) 20px
+            );
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
+            border-top: 2px solid #fff;
+        }
+
+        .bar-container.dimmed .bar-fill {
+            opacity: 0.4;
+            transform: scaleX(0.95);
+        }
+
+        /* Floating Tooltip */
+        .floating-tooltip {
+            position: absolute;
+            top: -60px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 20;
+            min-width: 140px;
+            text-align: left;
+        }
+
+        .bar-container.active .floating-tooltip, .bar-container:hover .floating-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip-title { color: var(--text-muted); margin-bottom: 4px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .tooltip-value { font-size: 1.25rem; font-weight: 700; color: var(--accent-orange); margin-bottom: 4px;}
+        .tooltip-stat { display: flex; align-items: center; gap: 6px; font-size: 0.75rem;}
+        .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+
     </style>
 </head>
 <body>
 
-<div class="widget-container">
-    <div class="corner-bottom-left">✦</div>
-    <div class="corner-bottom-right">✦</div>
-
-    <header>
-        <h1>Akasha Economic Simulator</h1>
-        <div class="subtitle">Adjust the parameters to reveal the fate of the city</div>
-    </header>
-
-    <!-- City Animation View -->
-    <div class="city-view-wrapper">
-        <svg class="city-svg" viewBox="0 0 1000 300" preserveAspectRatio="none">
-            <defs>
-                <!-- Sky Gradient -->
-                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:var(--sky-top); transition: stop-color 1.5s;" />
-                    <stop offset="100%" style="stop-color:var(--sky-bottom); transition: stop-color 1.5s;" />
-                </linearGradient>
-                <!-- Sun/Moon Glow -->
-                <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" style="stop-color:var(--sun-color); stop-opacity:1; transition: stop-color 1.5s;" />
-                    <stop offset="40%" style="stop-color:var(--sun-glow); stop-opacity:0.8; transition: stop-color 1.5s;" />
-                    <stop offset="100%" style="stop-color:var(--sun-glow); stop-opacity:0; transition: stop-color 1.5s;" />
-                </radialGradient>
-            </defs>
-
-            <!-- Sky Background -->
-            <rect width="1000" height="300" fill="url(#skyGrad)" />
-
-            <!-- Stars (Visible in night states) -->
-            <g style="opacity: var(--star-opacity); transition: opacity 1.5s;">
-                <circle class="star" cx="150" cy="50" r="1.5" fill="#fff" />
-                <circle class="star" cx="250" cy="80" r="2" fill="#fff" />
-                <circle class="star" cx="350" cy="30" r="1" fill="#fff" />
-                <circle class="star" cx="480" cy="60" r="1.5" fill="#fff" />
-                <circle class="star" cx="600" cy="20" r="2" fill="#fff" />
-                <circle class="star" cx="750" cy="70" r="1.5" fill="#fff" />
-                <circle class="star" cx="850" cy="40" r="2" fill="#fff" />
-                <circle class="star" cx="920" cy="90" r="1" fill="#fff" />
-            </g>
-
-            <!-- Celestial Body (Sun/Moon) -->
-            <circle class="sun-moon" cx="500" cy="var(--sun-y)" r="40" fill="url(#sunGlow)" />
-            
-            <!-- Moon Overlay (For crescent effect) -->
-            <circle class="sun-moon" cx="515" cy="calc(var(--sun-y) - 10px)" r="35" fill="var(--sky-top)" style="opacity: var(--moon-opacity);" />
-
-            <!-- Pollution / Fog Layer -->
-            <rect width="1000" height="300" fill="var(--pollution-color)" style="opacity: var(--pollution-opacity); mix-blend-mode: multiply;" />
-
-            <!-- Background Mountains -->
-            <path class="mountain" d="M0,300 L0,180 L150,120 L300,190 L450,130 L650,210 L800,110 L1000,170 L1000,300 Z" fill="var(--mountain-color)" />
-
-            <!-- Clouds -->
-            <g class="cloud-group" style="opacity: var(--cloud-opacity); fill: var(--cloud-color);">
-                <path class="cloud" d="M 100 100 Q 120 80 140 100 Q 160 90 180 110 Q 160 120 140 120 Q 120 120 100 100 Z" />
-                <path class="cloud" d="M 300 130 Q 330 100 370 130 Q 400 120 420 140 Q 380 160 350 150 Q 320 160 300 130 Z" />
-                <path class="cloud" d="M 700 80 Q 730 50 760 80 Q 790 70 810 90 Q 780 100 750 90 Q 720 100 700 80 Z" />
-                <path class="cloud" d="M 850 140 Q 870 120 890 140 Q 910 130 930 150 Q 910 160 890 160 Q 870 160 850 140 Z" />
-            </g>
-
-            <!-- City Layer 1 (Background Buildings) -->
-            <g fill="var(--build-bg)" class="building-bg">
-                <rect x="50" y="160" width="60" height="140" />
-                <rect x="130" y="140" width="80" height="160" />
-                <rect x="230" y="180" width="50" height="120" />
-                <rect x="300" y="120" width="70" height="180" />
-                <polygon points="300,120 335,80 370,120" />
-                <rect x="400" y="150" width="90" height="150" />
-                <rect x="520" y="130" width="60" height="170" />
-                <rect x="610" y="170" width="80" height="130" />
-                <rect x="720" y="110" width="60" height="190" />
-                <polygon points="720,110 750,60 780,110" />
-                <rect x="810" y="160" width="70" height="140" />
-                <rect x="900" y="140" width="50" height="160" />
-            </g>
-
-            <!-- City Layer 2 (Foreground Buildings) -->
-            <g fill="var(--build-fg)" class="building-fg">
-                <!-- Building 1 -->
-                <rect x="80" y="190" width="70" height="110" />
-                <rect x="90" y="170" width="50" height="20" />
-                <!-- Building 2 -->
-                <rect x="180" y="210" width="90" height="90" />
-                <!-- Building 3 (Tower) -->
-                <rect x="310" y="160" width="80" height="140" />
-                <polygon points="300,160 350,130 390,160" />
-                <!-- Building 4 -->
-                <rect x="430" y="200" width="100" height="100" />
-                <!-- Building 5 (Tall Skyscraper) -->
-                <rect x="560" y="150" width="70" height="150" />
-                <rect x="575" y="110" width="40" height="40" />
-                <rect x="590" y="70" width="10" height="40" />
-                <!-- Building 6 -->
-                <rect x="670" y="190" width="80" height="110" />
-                <!-- Building 7 -->
-                <rect x="780" y="180" width="90" height="120" />
-                <polygon points="780,180 825,150 870,180" />
-                <!-- Building 8 -->
-                <rect x="890" y="210" width="80" height="90" />
-            </g>
-
-            <!-- Windows (Dynamic glow) -->
-            <g fill="var(--window-color)" style="box-shadow: var(--window-glow);" class="window">
-                <!-- B1 -->
-                <rect x="95" y="210" width="10" height="15" />
-                <rect x="125" y="210" width="10" height="15" />
-                <rect x="95" y="240" width="10" height="15" />
-                <rect x="125" y="270" width="10" height="15" />
-                <!-- B2 -->
-                <rect x="195" y="230" width="15" height="10" />
-                <rect x="225" y="230" width="15" height="10" />
-                <rect x="195" y="260" width="15" height="10" />
-                <rect x="240" y="280" width="15" height="10" />
-                <!-- B3 -->
-                <rect x="330" y="180" width="10" height="20" />
-                <rect x="360" y="180" width="10" height="20" />
-                <rect x="330" y="220" width="10" height="20" />
-                <rect x="360" y="220" width="10" height="20" />
-                <rect x="330" y="260" width="10" height="20" />
-                <rect x="360" y="260" width="10" height="20" />
-                <!-- B4 -->
-                <rect x="450" y="220" width="20" height="10" />
-                <rect x="490" y="220" width="20" height="10" />
-                <rect x="450" y="250" width="20" height="10" />
-                <rect x="490" y="270" width="20" height="10" />
-                <!-- B5 (Skyscraper) -->
-                <rect x="575" y="170" width="8" height="15" />
-                <rect x="590" y="170" width="8" height="15" />
-                <rect x="605" y="170" width="8" height="15" />
-                <rect x="575" y="200" width="8" height="15" />
-                <rect x="605" y="200" width="8" height="15" />
-                <rect x="575" y="230" width="8" height="15" />
-                <rect x="590" y="230" width="8" height="15" />
-                <rect x="605" y="230" width="8" height="15" />
-                <rect x="575" y="260" width="8" height="15" />
-                <rect x="590" y="260" width="8" height="15" />
-                <rect x="605" y="260" width="8" height="15" />
-                <!-- B6 -->
-                <rect x="690" y="210" width="12" height="12" />
-                <rect x="720" y="210" width="12" height="12" />
-                <rect x="690" y="240" width="12" height="12" />
-                <rect x="720" y="260" width="12" height="12" />
-                <!-- B7 -->
-                <rect x="800" y="200" width="15" height="15" />
-                <rect x="830" y="200" width="15" height="15" />
-                <rect x="815" y="230" width="15" height="15" />
-                <rect x="800" y="260" width="15" height="15" />
-                <rect x="830" y="260" width="15" height="15" />
-                <!-- B8 -->
-                <rect x="910" y="230" width="40" height="10" />
-                <rect x="910" y="250" width="40" height="10" />
-                <rect x="910" y="270" width="40" height="10" />
-            </g>
-        </svg>
+<div class="app-container">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="logo-icon"></div>
+        <div class="nav-icons">
+            <div class="nav-icon ic-calendar"></div>
+            <div class="nav-icon ic-grid active" style="opacity: 1;"></div>
+            <div class="nav-icon ic-folder"></div>
+            <div class="nav-icon ic-settings"></div>
+        </div>
+        <div class="avatars">
+            <div class="avatar"><img src="https://i.pravatar.cc/100?img=33" alt="User"></div>
+            <div class="avatar"><img src="https://i.pravatar.cc/100?img=47" alt="User"></div>
+            <div class="add-btn">+</div>
+        </div>
+        <div class="toggle-switch">
+            <div class="toggle-knob"></div>
+        </div>
     </div>
 
-    <!-- Informational Panel -->
-    <div class="state-panel">
-        <div class="state-title" id="stateName">Balanced Republic</div>
-        <div class="state-desc" id="stateDesc">Moderate policies maintain a steady, unexceptional equilibrium. The city slumbers in peace.</div>
-    </div>
-
-    <!-- Controllers -->
-    <div class="controls-container">
+    <!-- Main Content -->
+    <div class="main-content">
         
-        <!-- Income Tax Card -->
-        <div class="control-card">
-            <div class="card-icon">✦</div>
-            <div class="card-title">Income Tax</div>
-            <div class="card-value"><span id="val-income">50</span>%</div>
-            <input type="range" id="slider-income" min="0" max="100" value="50">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                Economic Dashboard
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="header-actions">
+                <button class="btn-pill btn-primary">Card</button>
+                <button class="btn-pill btn-primary">Block</button>
+                <button class="btn-pill btn-accent">+ New Plan</button>
+            </div>
         </div>
 
-        <!-- Corporate Tax Card -->
-        <div class="control-card">
-            <div class="card-icon">✦</div>
-            <div class="card-title">Corporate Tax</div>
-            <div class="card-value"><span id="val-corp">50</span>%</div>
-            <input type="range" id="slider-corp" min="0" max="100" value="50">
+        <!-- Left Column: Dynamic City Card -->
+        <div class="city-card" id="cityCard">
+            <!-- Text Content -->
+            <div class="city-header">
+                <div class="state-label">Current State</div>
+                <div class="state-title" id="stateName">Balanced Republic</div>
+                <div class="state-desc" id="stateDesc">Moderate policies maintain a steady equilibrium. Infrastructure and economy operate harmoniously.</div>
+            </div>
+
+            <!-- Abstract Background Graphics (Wavy lines replacing realistic sky) -->
+            <svg class="abstract-waves" viewBox="0 0 800 400" preserveAspectRatio="none">
+                <path class="wave-path" id="wave1" d="M -100 250 Q 150 100 400 250 T 900 250" />
+                <path class="wave-path" id="wave2" d="M -100 300 Q 200 400 450 300 T 900 300" style="stroke-width: 60; opacity: 0.3" />
+                <path class="wave-path" id="wave3" d="M -100 350 Q 250 200 500 350 T 900 350" style="stroke-width: 80; opacity: 0.1" />
+            </svg>
+
+            <!-- Foreground City Graphics -->
+            <div class="city-blocks-container">
+                <div class="city-block b1"><div class="block-window"></div><div class="block-window"></div></div>
+                <div class="city-block b2"><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div></div>
+                <div class="city-block b3"><div class="block-window"></div></div>
+                <div class="city-block b4"><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div></div>
+                <div class="city-block b5"><div class="block-window"></div><div class="block-window"></div><div class="block-window"></div></div>
+            </div>
         </div>
 
-        <!-- Public Spending Card -->
-        <div class="control-card">
-            <div class="card-icon">✦</div>
-            <div class="card-title">Public Spending</div>
-            <div class="card-value"><span id="val-spend">50</span>%</div>
-            <input type="range" id="slider-spend" min="0" max="100" value="50">
+        <!-- Right Column: Info Checklist -->
+        <div class="info-widget">
+            <div class="info-header">Active Economic Policies</div>
+            <ul class="info-list" id="policyList">
+                <li class="info-item"><div class="checkbox checked"></div> Wealth Redistribution</li>
+                <li class="info-item"><div class="checkbox"></div> Corporate Subsidies</li>
+                <li class="info-item"><div class="checkbox checked"></div> Public Infrastructure</li>
+                <li class="info-item"><div class="checkbox"></div> Deregulation</li>
+            </ul>
+        </div>
+
+        <!-- Bottom Row: Interactive Bar Chart -->
+        <div class="bottom-row">
+            <div class="graph-widget">
+                <div class="graph-header">
+                    <div>
+                        <div class="graph-title">Parameter Overview</div>
+                        <div class="graph-subtitle">Drag bars to adjust macroeconomic variables</div>
+                    </div>
+                    <div class="graph-icon">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                </div>
+
+                <div class="chart-area" id="chartArea">
+                    <!-- Y Axis -->
+                    <div class="y-axis">
+                        <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+                    </div>
+                    
+                    <!-- Grid Lines -->
+                    <div class="grid-lines">
+                        <div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line"></div><div class="grid-line" style="background: rgba(255,255,255,0.3);"></div>
+                    </div>
+
+                    <!-- Bar 1: Income Tax -->
+                    <div class="bar-container" data-param="income">
+                        <div class="bar-track">
+                            <div class="bar-fill" id="bar-income" style="height: 50%;"></div>
+                        </div>
+                        <div class="x-label">Income Tax</div>
+                        <div class="floating-tooltip">
+                            <div class="tooltip-title">Income Tax</div>
+                            <div class="tooltip-value" id="val-income">50%</div>
+                            <div class="tooltip-stat">
+                                <div class="stat-dot" style="background: #a855f7;"></div> <span id="lvl-income">Moderate Level</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar 2: Corporate Tax -->
+                    <div class="bar-container" data-param="corp">
+                        <div class="bar-track">
+                            <div class="bar-fill" id="bar-corp" style="height: 50%;"></div>
+                        </div>
+                        <div class="x-label">Corporate Tax</div>
+                        <div class="floating-tooltip">
+                            <div class="tooltip-title">Corporate Tax</div>
+                            <div class="tooltip-value" id="val-corp">50%</div>
+                            <div class="tooltip-stat">
+                                <div class="stat-dot" style="background: #ec4899;"></div> <span id="lvl-corp">Moderate Level</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar 3: Public Spending -->
+                    <div class="bar-container" data-param="spend">
+                        <div class="bar-track">
+                            <div class="bar-fill" id="bar-spend" style="height: 50%;"></div>
+                        </div>
+                        <div class="x-label">Public Spending</div>
+                        <div class="floating-tooltip">
+                            <div class="tooltip-title">Public Spending</div>
+                            <div class="tooltip-value" id="val-spend">50%</div>
+                            <div class="tooltip-stat">
+                                <div class="stat-dot" style="background: #10b981;"></div> <span id="lvl-spend">Moderate Level</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
     </div>
@@ -530,152 +727,166 @@
 
 <script>
     /**
-     * Akasha Economic Simulator - Logic Script
-     * Maps 3 variables (0-100) into 12 distinct socioeconomic states.
+     * Modern UI Economic Simulator - Logic Script
      */
 
+    // State Variables
+    let economyValues = {
+        income: 50,
+        corp: 50,
+        spend: 50
+    };
+
     // DOM Elements
-    const slIncome = document.getElementById('slider-income');
-    const slCorp = document.getElementById('slider-corp');
-    const slSpend = document.getElementById('slider-spend');
+    const chartArea = document.getElementById('chartArea');
+    const barContainers = document.querySelectorAll('.bar-container');
+    const root = document.documentElement;
     
-    const valIncome = document.getElementById('val-income');
-    const valCorp = document.getElementById('val-corp');
-    const valSpend = document.getElementById('val-spend');
+    const elements = {
+        income: {
+            fill: document.getElementById('bar-income'),
+            valText: document.getElementById('val-income'),
+            lvlText: document.getElementById('lvl-income')
+        },
+        corp: {
+            fill: document.getElementById('bar-corp'),
+            valText: document.getElementById('val-corp'),
+            lvlText: document.getElementById('lvl-corp')
+        },
+        spend: {
+            fill: document.getElementById('bar-spend'),
+            valText: document.getElementById('val-spend'),
+            lvlText: document.getElementById('lvl-spend')
+        }
+    };
 
     const stateNameEl = document.getElementById('stateName');
     const stateDescEl = document.getElementById('stateDesc');
-    const root = document.documentElement;
+    const policyListEl = document.getElementById('policyList');
+    
+    // Abstract Wave Elements for Animation
+    const waves = [
+        document.getElementById('wave1'),
+        document.getElementById('wave2'),
+        document.getElementById('wave3')
+    ];
 
-    let currentStateIndex = -1;
-
-    // The 12 Archetypal States Definitions
-    // Contains visual aesthetic variables for the SVG city map.
+    /**
+     * 12 Economic States Definitions mapped to Modern UI Aesthetics
+     */
     const statesData = {
         1: {
-            name: "Anarcho-Capitalist Wastes",
-            desc: "Without taxes or spending, infrastructure crumbles. The skies are choked with dust, and only the ruthless thrive in the shadows.",
+            name: "Anarcho-Capitalist",
+            desc: "Without taxes or spending, infrastructure crumbles. The free market reigns absolute in a cutthroat environment.",
             theme: {
-                skyTop: "#292524", skyBottom: "#78716c", sunY: "250px", sunColor: "#ef4444", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#44403c", cloudOpacity: 1, 
-                mountainColor: "#1c1917", buildBg: "#0c0a09", buildFg: "#000000", 
-                windowColor: "#b91c1c", pollutionOpacity: 0.6, pollutionColor: "#78350f"
-            }
+                bg1: "#1f1c2c", bg2: "#928dab",
+                cityBlock: "#111111", waveOpacity: "0.2"
+            },
+            policies: ["Unregulated Markets", "Private Infrastructure", "Zero Safety Net"]
         },
         2: {
             name: "Reckless Deficit",
-            desc: "Massive public spending with no tax revenue causes hyperinflation. The city burns bright with borrowed money as the economic sun sets.",
+            desc: "Massive public spending with no tax revenue causes hyperinflation. An unsustainable boom.",
             theme: {
-                skyTop: "#7f1d1d", skyBottom: "#ea580c", sunY: "150px", sunColor: "#f97316", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#fca5a5", cloudOpacity: 0.8, 
-                mountainColor: "#450a0a", buildBg: "#2e1065", buildFg: "#172554", 
-                windowColor: "#fcd34d", pollutionOpacity: 0.3, pollutionColor: "#991b1b"
-            }
+                bg1: "#ff416c", bg2: "#ff4b2b",
+                cityBlock: "#fff0f0", waveOpacity: "0.9"
+            },
+            policies: ["Hyperinflation Risk", "Massive Debt", "Overfunded Projects"]
         },
         3: {
             name: "Socialist Utopia",
-            desc: "High taxes fuel unprecedented public welfare. The city gleams under a pristine sky, a monument to collective prosperity and harmony.",
+            desc: "High taxes fuel unprecedented public welfare. A heavily structured system prioritizing collective prosperity.",
             theme: {
-                skyTop: "#06b6d4", skyBottom: "#6ee7b7", sunY: "80px", sunColor: "#fef08a", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#ffffff", cloudOpacity: 0.9, 
-                mountainColor: "#0f766e", buildBg: "#0ea5e9", buildFg: "#0284c7", 
-                windowColor: "#ffffff", pollutionOpacity: 0, pollutionColor: "#000000"
-            }
+                bg1: "#00c6ff", bg2: "#0072ff",
+                cityBlock: "#ffffff", waveOpacity: "0.8"
+            },
+            policies: ["Universal Healthcare", "Free Education", "Wealth Limits"]
         },
         4: {
             name: "Stagnant Bureaucracy",
-            desc: "Heavy taxation with minimal public return. The sky is perpetually overcast, casting a gloomy shadow over unmaintained grey monoliths.",
+            desc: "Heavy taxation with minimal public return. Citizens are drained to maintain a bloated administrative state.",
             theme: {
-                skyTop: "#475569", skyBottom: "#94a3b8", sunY: "350px", sunColor: "#cbd5e1", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#64748b", cloudOpacity: 1, 
-                mountainColor: "#334155", buildBg: "#1e293b", buildFg: "#0f172a", 
-                windowColor: "#334155", pollutionOpacity: 0.4, pollutionColor: "#475569"
-            }
+                bg1: "#606c88", bg2: "#3f4c6b",
+                cityBlock: "#888888", waveOpacity: "0.4"
+            },
+            policies: ["High Administration Costs", "Inefficient Allocation", "Public Frustration"]
         },
         5: {
             name: "Corporate Oligarchy",
-            desc: "The working class is heavily taxed while corporations roam free. Neon signs piece the dystopian night sky, owned by the elite few.",
+            desc: "Workers are heavily taxed while corporations roam free. Neon monoliths tower over struggling citizens.",
             theme: {
-                skyTop: "#020617", skyBottom: "#1e1b4b", sunY: "80px", sunColor: "#a855f7", 
-                moonOpacity: 1, starOpacity: 1, cloudColor: "#312e81", cloudOpacity: 0.6, 
-                mountainColor: "#000000", buildBg: "#0f172a", buildFg: "#020617", 
-                windowColor: "#a855f7", pollutionOpacity: 0.5, pollutionColor: "#c026d3"
-            }
+                bg1: "#240b36", bg2: "#c31432",
+                cityBlock: "#0a0a0a", waveOpacity: "0.7"
+            },
+            policies: ["Corporate Subsidies", "Monopoly Protections", "Labor Exploitation"]
         },
         6: {
             name: "Merchant's Haven",
-            desc: "Low income tax attracts workers, while moderate corporate taxes keep the state afloat. A starry, peaceful night embraces a bustling trade hub.",
+            desc: "Low income tax attracts talent, moderate corporate taxes keep the state afloat. A bustling trade hub.",
             theme: {
-                skyTop: "#0f172a", skyBottom: "#1d4ed8", sunY: "60px", sunColor: "#e2e8f0", 
-                moonOpacity: 1, starOpacity: 1, cloudColor: "#1e3a8a", cloudOpacity: 0.4, 
-                mountainColor: "#1e293b", buildBg: "#1e40af", buildFg: "#1e3a8a", 
-                windowColor: "#60a5fa", pollutionOpacity: 0, pollutionColor: "#000000"
-            }
+                bg1: "#11998e", bg2: "#38ef7d",
+                cityBlock: "#f4f4f4", waveOpacity: "0.6"
+            },
+            policies: ["Free Trade Zones", "Talent Attraction", "Moderate Tariffs"]
         },
         7: {
             name: "Welfare Trap",
-            desc: "High income tax funds welfare, but corporations flee. Citizens rely entirely on the state in a tranquil but economically stagnant twilight.",
+            desc: "High income tax funds welfare, but corporations flee. Citizens rely heavily on state support in a stagnant economy.",
             theme: {
-                skyTop: "#4c1d95", skyBottom: "#a21caf", sunY: "180px", sunColor: "#fbcfe8", 
-                moonOpacity: 0, starOpacity: 0.5, cloudColor: "#701a75", cloudOpacity: 0.7, 
-                mountainColor: "#3b0764", buildBg: "#4a044e", buildFg: "#2e1065", 
-                windowColor: "#f0abfc", pollutionOpacity: 0.2, pollutionColor: "#4c1d95"
-            }
+                bg1: "#8E2DE2", bg2: "#4A00E0",
+                cityBlock: "#e0e0e0", waveOpacity: "0.5"
+            },
+            policies: ["High Universal Basic Income", "Capital Flight", "Work Disincentives"]
         },
         8: {
             name: "Technocratic Rule",
-            desc: "Corporations are heavily taxed to fund massive technological public works. The city glows with cold, efficient cyan energy under a sterile sky.",
+            desc: "Corporations are heavily taxed to fund massive technological public works. Cold, efficient, and heavily planned.",
             theme: {
-                skyTop: "#082f49", skyBottom: "#064e3b", sunY: "100px", sunColor: "#2dd4bf", 
-                moonOpacity: 1, starOpacity: 0.8, cloudColor: "#022c22", cloudOpacity: 0.5, 
-                mountainColor: "#020617", buildBg: "#0f766e", buildFg: "#065f46", 
-                windowColor: "#5eead4", pollutionOpacity: 0, pollutionColor: "#000000"
-            }
+                bg1: "#0f2027", bg2: "#203a43",
+                cityBlock: "#00adb5", waveOpacity: "0.8"
+            },
+            policies: ["AI Governance", "Research Grants", "Strict Automation Rules"]
         },
         9: {
             name: "The Golden Era",
-            desc: "A perfect balance of moderate taxation and high public investment. The city basks in the warm glow of a golden afternoon, radiating prosperity.",
+            desc: "Perfect balance of moderate taxation and high public investment. A vibrant, thriving metropolitan state.",
             theme: {
-                skyTop: "#ea580c", skyBottom: "#fde047", sunY: "120px", sunColor: "#ffffff", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#fef08a", cloudOpacity: 0.6, 
-                mountainColor: "#b45309", buildBg: "#d97706", buildFg: "#92400e", 
-                windowColor: "#fef08a", pollutionOpacity: 0, pollutionColor: "#000000"
-            }
+                bg1: "#f12711", bg2: "#f5af19",
+                cityBlock: "#ffffff", waveOpacity: "0.9"
+            },
+            policies: ["Balanced Budget", "Optimal Infrastructure", "High Social Cohesion"]
         },
         10: {
             name: "Industrial Boom",
-            desc: "Corporate focus with low public spending leads to massive industrial output. The sky is yellowed with smog, but the factories never sleep.",
+            desc: "Corporate focus with low public spending leads to massive industrial output, often at the cost of public health.",
             theme: {
-                skyTop: "#a16207", skyBottom: "#facc15", sunY: "200px", sunColor: "#fef08a", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#854d0e", cloudOpacity: 0.9, 
-                mountainColor: "#713f12", buildBg: "#422006", buildFg: "#291304", 
-                windowColor: "#fde047", pollutionOpacity: 0.7, pollutionColor: "#a16207"
-            }
+                bg1: "#b79891", bg2: "#94716b",
+                cityBlock: "#3e2723", waveOpacity: "0.3"
+            },
+            policies: ["Deregulation", "High Emissions", "Rapid GDP Growth"]
         },
         11: {
             name: "Impoverished Slums",
-            desc: "High taxes choke both workers and businesses, with middling returns. The city sits in darkness, a dilapidated husk of its former glory.",
+            desc: "High taxes choke both workers and businesses, with middling returns. The economy enters a dark recession.",
             theme: {
-                skyTop: "#171717", skyBottom: "#404040", sunY: "400px", sunColor: "#000000", 
-                moonOpacity: 0, starOpacity: 0.2, cloudColor: "#262626", cloudOpacity: 0.8, 
-                mountainColor: "#0a0a0a", buildBg: "#171717", buildFg: "#000000", 
-                windowColor: "#525252", pollutionOpacity: 0.5, pollutionColor: "#171717"
-            }
+                bg1: "#141E30", bg2: "#243B55",
+                cityBlock: "#1c1c1c", waveOpacity: "0.1"
+            },
+            policies: ["Severe Austerity", "High Poverty Rates", "Infrastructure Decay"]
         },
         12: {
             name: "Balanced Republic",
-            desc: "Moderate policies across the board maintain a steady, unexceptional equilibrium. The city slumbers in peace beneath a clear blue sky.",
+            desc: "Moderate policies across the board maintain a steady, unexceptional equilibrium. Safe and predictable.",
             theme: {
-                skyTop: "#1e3a8a", skyBottom: "#7dd3fc", sunY: "100px", sunColor: "#fde047", 
-                moonOpacity: 0, starOpacity: 0, cloudColor: "#ffffff", cloudOpacity: 0.8, 
-                mountainColor: "#475569", buildBg: "#334155", buildFg: "#1e293b", 
-                windowColor: "#fde047", pollutionOpacity: 0, pollutionColor: "#000000"
-            }
+                bg1: "#4b6cb7", bg2: "#182848",
+                cityBlock: "#e2e8f0", waveOpacity: "0.7"
+            },
+            policies: ["Standard Taxation", "Stable Utilities", "Moderate Growth"]
         }
     };
 
     /**
-     * Categorize a 0-100 value into Low (L), Mid (M), High (H)
+     * Logic categorization
      */
     function getLevel(val) {
         if (val <= 33) return 'L';
@@ -683,91 +894,176 @@
         return 'H';
     }
 
-    /**
-     * Map the 27 possible combinations of (L, M, H) to the 12 States
-     */
+    function getLevelText(val) {
+        if (val <= 33) return 'Low Level';
+        if (val <= 66) return 'Moderate Level';
+        return 'High Level';
+    }
+
     const logicMatrix = {
-        // L Income
         'L-L-L': 1, 'L-L-M': 12, 'L-L-H': 2,
         'L-M-L': 1, 'L-M-M': 12, 'L-M-H': 2,
         'L-H-L': 6, 'L-H-M': 6,  'L-H-H': 8,
-
-        // M Income
         'M-L-L': 1, 'M-L-M': 12, 'M-L-H': 2,
         'M-M-L': 10,'M-M-M': 12, 'M-M-H': 9,
         'M-H-L': 4, 'M-H-M': 10, 'M-H-H': 3,
-
-        // H Income
         'H-L-L': 5, 'H-L-M': 5,  'H-L-H': 7,
         'H-M-L': 4, 'H-M-M': 11, 'H-M-H': 3,
         'H-H-L': 4, 'H-H-M': 11, 'H-H-H': 3
     };
 
-    /**
-     * Update the SVG UI CSS Variables based on state theme
-     */
-    function applyTheme(theme) {
-        root.style.setProperty('--sky-top', theme.skyTop);
-        root.style.setProperty('--sky-bottom', theme.skyBottom);
-        root.style.setProperty('--sun-y', theme.sunY);
-        root.style.setProperty('--sun-color', theme.sunColor);
-        root.style.setProperty('--moon-opacity', theme.moonOpacity);
-        root.style.setProperty('--star-opacity', theme.starOpacity);
-        root.style.setProperty('--cloud-color', theme.cloudColor);
-        root.style.setProperty('--cloud-opacity', theme.cloudOpacity);
-        root.style.setProperty('--mountain-color', theme.mountainColor);
-        root.style.setProperty('--build-bg', theme.buildBg);
-        root.style.setProperty('--build-fg', theme.buildFg);
-        root.style.setProperty('--window-color', theme.windowColor);
-        root.style.setProperty('--pollution-opacity', theme.pollutionOpacity);
-        root.style.setProperty('--pollution-color', theme.pollutionColor);
-        
-        // Add text flash effect
-        stateNameEl.style.color = "#ffffff";
-        setTimeout(() => {
-            stateNameEl.style.color = "var(--gold-light)";
-        }, 300);
-    }
+    let currentStateIndex = -1;
 
     /**
-     * Main evaluation function triggered on slider change
+     * Render the UI based on the 3 economy values
      */
-    function evaluateEconomy() {
-        const inc = parseInt(slIncome.value);
-        const corp = parseInt(slCorp.value);
-        const spend = parseInt(slSpend.value);
+    function updateEconomy() {
+        // Update Graph Bars visually
+        Object.keys(economyValues).forEach(key => {
+            const val = economyValues[key];
+            elements[key].fill.style.height = `${val}%`;
+            elements[key].valText.innerText = `${val}%`;
+            elements[key].lvlText.innerText = getLevelText(val);
+        });
 
-        // Update Text displays
-        valIncome.innerText = inc;
-        valCorp.innerText = corp;
-        valSpend.innerText = spend;
+        const incLvl = getLevel(economyValues.income);
+        const corpLvl = getLevel(economyValues.corp);
+        const spendLvl = getLevel(economyValues.spend);
 
-        // Determine Levels
-        const comboKey = `${getLevel(inc)}-${getLevel(corp)}-${getLevel(spend)}`;
-        
-        // Find corresponding state (fallback to 12 if somehow undefined)
+        const comboKey = `${incLvl}-${corpLvl}-${spendLvl}`;
         const stateId = logicMatrix[comboKey] || 12;
 
         if (currentStateIndex !== stateId) {
             currentStateIndex = stateId;
             const stateObj = statesData[stateId];
             
-            // Update Text
-            stateNameEl.innerText = `✦ ${stateObj.name} ✦`;
+            // Text updates
+            stateNameEl.innerText = stateObj.name;
             stateDescEl.innerText = stateObj.desc;
             
-            // Update Visuals
-            applyTheme(stateObj.theme);
+            // Apply Modern Theme CSS Variables
+            root.style.setProperty('--state-bg-1', stateObj.theme.bg1);
+            root.style.setProperty('--state-bg-2', stateObj.theme.bg2);
+            root.style.setProperty('--city-block-main', stateObj.theme.cityBlock);
+            root.style.setProperty('--wave-opacity', stateObj.theme.waveOpacity);
+
+            // Update Policies Widget
+            policyListEl.innerHTML = '';
+            stateObj.policies.forEach((policy, idx) => {
+                const li = document.createElement('li');
+                li.className = 'info-item';
+                // Randomize checked state visually for realism based on index
+                const checkedClass = (idx % 2 === 0) ? 'checked' : '';
+                li.innerHTML = `<div class="checkbox ${checkedClass}"></div> ${policy}`;
+                policyListEl.appendChild(li);
+            });
+
+            // Trigger wave animation shift
+            animateWaves();
         }
     }
 
-    // Event Listeners for smooth real-time update
-    slIncome.addEventListener('input', evaluateEconomy);
-    slCorp.addEventListener('input', evaluateEconomy);
-    slSpend.addEventListener('input', evaluateEconomy);
+    /**
+     * Simple procedural animation for the background waves
+     */
+    function animateWaves() {
+        const randomOffset = () => Math.floor(Math.random() * 100) - 50;
+        waves[0].setAttribute('d', `M -100 ${250+randomOffset()} Q ${150+randomOffset()} ${100+randomOffset()} 400 ${250+randomOffset()} T 900 250`);
+        waves[1].setAttribute('d', `M -100 ${300+randomOffset()} Q ${200+randomOffset()} ${400+randomOffset()} 450 ${300+randomOffset()} T 900 300`);
+        waves[2].setAttribute('d', `M -100 ${350+randomOffset()} Q ${250+randomOffset()} ${200+randomOffset()} 500 ${350+randomOffset()} T 900 350`);
+    }
 
-    // Initialize
-    evaluateEconomy();
+    /**
+     * Interactive Graph Logic (The "Warping Feedback")
+     */
+    let activeParam = null;
+
+    function handleDrag(e) {
+        if (!activeParam) return;
+        
+        // Calculate Y position relative to the chart area
+        const rect = chartArea.getBoundingClientRect();
+        // Constraints mapping
+        let y = e.clientY - rect.top;
+        // Chart uses bottom 20px to top 20px essentially
+        const trackHeight = rect.height - 40; // adjusting for paddings
+        let percentage = 100 - ((y - 20) / trackHeight * 100);
+        
+        // Clamp 0-100
+        percentage = Math.max(0, Math.min(100, percentage));
+        
+        // Round to nearest int
+        percentage = Math.round(percentage);
+        
+        if (economyValues[activeParam] !== percentage) {
+            economyValues[activeParam] = percentage;
+            updateEconomy();
+        }
+    }
+
+    // Attach Event Listeners to Bars
+    barContainers.forEach(container => {
+        const param = container.getAttribute('data-param');
+        
+        // Mouse / Touch Down
+        const startDrag = (e) => {
+            activeParam = param;
+            container.classList.add('active');
+            
+            // Dim others
+            barContainers.forEach(c => {
+                if (c !== container) c.classList.add('dimmed');
+            });
+            
+            handleDrag(e.touches ? e.touches[0] : e);
+            document.body.style.cursor = 'ns-resize';
+        };
+
+        container.addEventListener('mousedown', startDrag);
+        container.addEventListener('touchstart', startDrag, {passive: true});
+
+        // Hover effect dimension
+        container.addEventListener('mouseenter', () => {
+            if(!activeParam) {
+                barContainers.forEach(c => {
+                    if (c !== container) c.classList.add('dimmed');
+                });
+            }
+        });
+        container.addEventListener('mouseleave', () => {
+            if(!activeParam) {
+                barContainers.forEach(c => c.classList.remove('dimmed'));
+            }
+        });
+    });
+
+    // Global Mouse / Touch Move
+    window.addEventListener('mousemove', (e) => {
+        if (activeParam) handleDrag(e);
+    });
+    window.addEventListener('touchmove', (e) => {
+        if (activeParam) handleDrag(e.touches[0]);
+    }, {passive: false});
+
+    // Global Mouse / Touch Up
+    const stopDrag = () => {
+        if (activeParam) {
+            barContainers.forEach(c => {
+                c.classList.remove('active');
+                c.classList.remove('dimmed');
+            });
+            activeParam = null;
+            document.body.style.cursor = 'default';
+        }
+    };
+
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+
+    // Initialize Layout & Economy
+    updateEconomy();
+    // Initial Wave animation
+    setInterval(animateWaves, 3000);
 
 </script>
 
