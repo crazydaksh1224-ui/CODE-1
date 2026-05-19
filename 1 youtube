@@ -633,7 +633,7 @@
             
             setTimeout(() => {
                 // Redirect to YouTube in the same tab
-                window.location.href = 'https://www.youtube.com';
+                window.location.href = 'https://www.notion.so/TASK-CHECK-30eb8057544e80fba29cc9991f5197b6';
             }, 300);
             
         }, 1200); // 1.2s delay for visual feedback
