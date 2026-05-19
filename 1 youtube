@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Monotone Warp Widget</title>
+    <!-- Tailwind CSS for modern utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for neat, minimalist Notion-style icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter for that clean Notion typographic aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        notion: {
+                            lightBg: '#fbfbfa',
+                            lightBorder: '#e3e3e2',
+                            lightText: '#37352f',
+                            darkBg: '#191919',
+                            darkBorder: '#2f2f2f',
+                            darkText: '#ebebeb',
+                            accent: '#2eaadc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base styling overrides for Notion Monotone appearance */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbfbfa;
+            color: #37352f;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow: hidden;
+        }
+
+        .dark body {
+            background-color: #191919;
+            color: #ebebeb;
+        }
+
+        /* 3D Transform perspective container */
+        .perspective-container {
+            perspective: 1000px;
+        }
+
+        /* Warp Distortion Liquid Filter */
+        .warp-filter {
+            filter: url('#gooey-warp');
+        }
+
+        /* Custom subtle grid background reminiscent of Notion layout designs */
+        .notion-grid {
+            background-size: 24px 24px;
+            background-image: 
+                linear-gradient(to right, rgba(55, 53, 47, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(55, 53, 47, 0.03) 1px, transparent 1px);
+        }
+
+        .dark .notion-grid {
+            background-image: 
+                linear-gradient(to right, rgba(235, 235, 235, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(235, 235, 235, 0.02) 1px, transparent 1px);
+        }
+
+        /* Elegant custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(150, 150, 150, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(150, 150, 150, 0.4);
+        }
+
+        /* Ripple effect trigger */
+        .ripple {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-effect 0.6s linear;
+            pointer-events: none;
+        }
+        .dark .ripple {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="h-full w-full select-none notion-grid flex flex-col items-center justify-center transition-all duration-300">
+
+    <!-- Custom SVG gooey distortion filter used for the button hover warp transition -->
+    <svg class="hidden">
+        <defs>
+            <filter id="gooey-warp">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Full-screen Canvas for Background Warp speed effect -->
+    <canvas id="warpCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40 dark:opacity-30 transition-opacity duration-500"></canvas>
+
+    <!-- Notion Header Bar -->
+    <header class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10 border-b border-notion-lightBorder/40 dark:border-notion-darkBorder/40 bg-notion-lightBg/85 dark:bg-notion-darkBg/85 backdrop-blur-md">
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono tracking-wider text-neutral-400 uppercase">Monotone Widget //</span>
+            <span class="text-xs font-semibold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-md text-neutral-600 dark:text-neutral-400">v2.1</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Theme Toggle Button -->
+            <button id="themeToggle" class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors" title="Toggle Appearance">
+                <i class="fa-regular fa-moon text-sm dark:hidden"></i>
+                <i class="fa-regular fa-sun text-sm hidden dark:block"></i>
+            </button>
+            <!-- Settings Switcher -->
+            <button id="settingsToggle" class="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors" title="Configure Widget">
+                <i class="fa-solid fa-sliders text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Settings Sidebar Panel -->
+    <aside id="settingsPanel" class="fixed right-0 top-0 h-full w-80 bg-notion-lightBg dark:bg-notion-darkBg border-l border-notion-lightBorder dark:border-notion-darkBorder z-30 translate-x-full transition-transform duration-300 ease-in-out shadow-2xl p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex justify-between items-center mb-6 border-b border-notion-lightBorder dark:border-notion-darkBorder pb-4">
+                <h3 class="font-semibold text-sm tracking-wide text-neutral-700 dark:text-neutral-300 uppercase">Configuration</h3>
+                <button id="closeSettings" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Parameters Sliders -->
+            <div class="space-y-6">
+                <!-- Particle Count -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-neutral-500">Particle Count</span>
+                        <span id="particleVal" class="font-mono text-neutral-400">120</span>
+                    </div>
+                    <input type="range" id="particleSlider" min="50" max="300" value="120" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Idle Speed -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-neutral-500">Idle Warp Speed</span>
+                        <span id="idleSpeedVal" class="font-mono text-neutral-400">0.5</span>
+                    </div>
+                    <input type="range" id="idleSpeedSlider" min="0" max="2" step="0.1" value="0.5" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Hover Speed -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-neutral-500">Hover Warp Speed</span>
+                        <span id="hoverSpeedVal" class="font-mono text-neutral-400">15</span>
+                    </div>
+                    <input type="range" id="hoverSpeedSlider" min="5" max="30" step="1" value="15" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Custom Button Label -->
+                <div class="space-y-2">
+                    <label class="text-xs font-medium text-neutral-500">Button Label</label>
+                    <input type="text" id="btnLabelInput" value="Initialize Warp" class="w-full text-xs p-2 rounded border border-notion-lightBorder dark:border-notion-darkBorder bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:border-neutral-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-notion-lightBorder dark:border-notion-darkBorder pt-4">
+            <p class="text-[10px] text-neutral-400 font-mono leading-relaxed">
+                Interact with the central monolith. Clicking initiates local Chrome simulation, proceeding towards global transmission targets.
+            </p>
+        </div>
+    </aside>
+
+    <!-- Center Button Widget container -->
+    <main class="relative z-10 w-full max-w-lg px-6 flex flex-col items-center justify-center">
+        <!-- Parallax/Tilt wrapper -->
+        <div id="tiltWrapper" class="perspective-container w-full flex flex-col items-center justify-center">
+            
+            <!-- Beautiful surrounding border/glow widget element -->
+            <div id="widgetCard" class="w-full max-w-sm p-8 bg-notion-lightBg dark:bg-notion-darkBg border border-notion-lightBorder dark:border-notion-darkBorder rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col items-center justify-center text-center transition-all duration-300 relative group">
+                
+                <!-- Decorative Monotonic corner markings -->
+                <div class="absolute top-3 left-3 w-2 h-2 border-t border-l border-neutral-300 dark:border-neutral-700"></div>
+                <div class="absolute top-3 right-3 w-2 h-2 border-t border-r border-neutral-300 dark:border-neutral-700"></div>
+                <div class="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-neutral-300 dark:border-neutral-700"></div>
+                <div class="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-neutral-300 dark:border-neutral-700"></div>
+
+                <!-- Visual Cue Icon -->
+                <div class="mb-5 w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-400 dark:text-neutral-600 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 transition-colors">
+                    <i class="fa-solid fa-atom animate-pulse text-sm"></i>
+                </div>
+
+                <h1 class="text-sm font-semibold tracking-wider text-neutral-700 dark:text-neutral-300 uppercase mb-2">Workspace Hub</h1>
+                <p class="text-xs text-neutral-400 dark:text-neutral-500 mb-8 max-w-[240px]">Hover to load engines. Click to transition outwards.</p>
+
+                <!-- The Core Target Button -->
+                <button id="warpButton" class="relative group/btn w-56 h-14 overflow-hidden rounded-xl border border-neutral-800 dark:border-neutral-200 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 font-medium tracking-wide text-xs uppercase shadow-[0_4px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_25px_rgba(255,255,255,0.08)] transform transition-transform duration-200 focus:outline-none focus:ring-1 focus:ring-neutral-400 active:scale-95">
+                    
+                    <!-- Monotone Inner liquid effect/Warp Layer via styling -->
+                    <div class="absolute inset-0 bg-neutral-100 dark:bg-neutral-900 transition-transform duration-500 scale-y-0 origin-bottom group-hover/btn:scale-y-100"></div>
+                    
+                    <!-- Content layer with icons sliding elegantly -->
+                    <span id="btnTextContainer" class="relative z-10 flex items-center justify-center space-x-2 transition-colors duration-300 group-hover/btn:text-neutral-900 dark:group-hover/btn:text-neutral-100">
+                        <span id="btnLabel">Initialize Warp</span>
+                        <i id="btnIcon" class="fa-solid fa-arrow-right-long text-[10px] transform group-hover/btn:translate-x-2 transition-transform duration-300"></i>
+                    </span>
+
+                    <!-- Decorative Border Glow for Notion High Contrast Monotone look -->
+                    <div class="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Minimalist Custom Chrome-Style Transition Screen overlay -->
+    <div id="loaderOverlay" class="fixed inset-0 bg-notion-lightBg dark:bg-notion-darkBg z-50 flex flex-col items-center justify-center pointer-events-none opacity-0 scale-105 transition-all duration-700 ease-out">
+        <div class="w-full max-w-xl px-8 flex flex-col items-center">
+            
+            <!-- Mock Chrome Browser Window Header -->
+            <div class="w-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-t-xl p-3 flex items-center space-x-2">
+                <div class="flex space-x-1.5">
+                    <span class="w-3 h-3 rounded-full bg-red-400/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-yellow-400/80"></span>
+                    <span class="w-3 h-3 rounded-full bg-green-400/80"></span>
+                </div>
+                <div class="flex-1 max-w-xs mx-auto bg-white dark:bg-black/40 border border-neutral-200/60 dark:border-neutral-800 rounded-md py-1 px-3 text-[10px] text-center text-neutral-400 dark:text-neutral-500 flex items-center justify-center space-x-2 font-mono truncate">
+                    <i class="fa-solid fa-lock text-[8px] text-green-500"></i>
+                    <span id="tabUrlText">fetching://current_chrome_page</span>
+                </div>
+            </div>
+
+            <!-- Mock Page Loading Body -->
+            <div class="w-full bg-white dark:bg-neutral-950 border-x border-b border-neutral-200 dark:border-neutral-800 rounded-b-xl p-10 flex flex-col items-center justify-center space-y-8 relative overflow-hidden">
+                
+                <!-- Spin/Wave visual loader -->
+                <div class="relative w-16 h-16">
+                    <div class="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-800"></div>
+                    <div class="absolute inset-0 rounded-full border-t-2 border-neutral-800 dark:border-white animate-spin"></div>
+                </div>
+
+                <!-- Dynamic Status Terminal Logs -->
+                <div class="w-full max-w-sm text-center">
+                    <h2 class="text-sm font-semibold tracking-wider text-neutral-700 dark:text-neutral-300 uppercase mb-2">Redirecting to YouTube</h2>
+                    <p id="loaderStatus" class="text-xs text-neutral-400 font-mono tracking-tight">Extracting origin metadata...</p>
+                </div>
+
+                <!-- Minimalist Progress Bar -->
+                <div class="w-full max-w-xs bg-neutral-100 dark:bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+                    <div id="progressBar" class="w-0 bg-neutral-800 dark:bg-neutral-200 h-full transition-all duration-300 ease-out"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer subtle credit tag -->
+    <footer class="absolute bottom-4 left-0 w-full text-center z-10">
+        <p class="text-[10px] text-neutral-400 font-mono tracking-widest uppercase">Monolithic Core Interface</p>
+    </footer>
+
+    <script>
+        // DOM Element Cache
+        const themeToggle = document.getElementById('themeToggle');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeSettings = document.getElementById('closeSettings');
+        const widgetCard = document.getElementById('widgetCard');
+        const tiltWrapper = document.getElementById('tiltWrapper');
+        const warpButton = document.getElementById('warpButton');
+        const btnLabel = document.getElementById('btnLabel');
+        const btnLabelInput = document.getElementById('btnLabelInput');
+        const particleSlider = document.getElementById('particleSlider');
+        const particleVal = document.getElementById('particleVal');
+        const idleSpeedSlider = document.getElementById('idleSpeedSlider');
+        const idleSpeedVal = document.getElementById('idleSpeedVal');
+        const hoverSpeedSlider = document.getElementById('hoverSpeedSlider');
+        const hoverSpeedVal = document.getElementById('hoverSpeedVal');
+        const loaderOverlay = document.getElementById('loaderOverlay');
+        const loaderStatus = document.getElementById('loaderStatus');
+        const progressBar = document.getElementById('progressBar');
+        const tabUrlText = document.getElementById('tabUrlText');
+        const warpCanvas = document.getElementById('warpCanvas');
+        const ctx = warpCanvas.getContext('2d');
+
+        // Application State State Configuration
+        let state = {
+            theme: localStorage.getItem('theme') || 'light',
+            particleCount: parseInt(particleSlider.value),
+            idleWarpSpeed: parseFloat(idleSpeedSlider.value),
+            hoverWarpSpeed: parseFloat(hoverSpeedSlider.value),
+            isHovered: false,
+            currentSpeed: parseFloat(idleSpeedSlider.value),
+            buttonLabel: btnLabelInput.value,
+            isRedirecting: false
+        };
+
+        // Particle Array and Canvas Dimensions setup
+        let particles = [];
+        let cx = window.innerWidth / 2;
+        let cy = window.innerHeight / 2;
+
+        function resizeCanvas() {
+            warpCanvas.width = window.innerWidth;
+            warpCanvas.height = window.innerHeight;
+            cx = warpCanvas.width / 2;
+            cy = warpCanvas.height / 2;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Particle Class representing individual stars/lines in space warp
+        class WarpParticle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                // Initialize randomly on screen
+                this.x = (Math.random() - 0.5) * warpCanvas.width;
+                this.y = (Math.random() - 0.5) * warpCanvas.height;
+                this.z = Math.random() * warpCanvas.width;
+                
+                // Track previous dimensions for lines stretching effect
+                this.px = this.x;
+                this.py = this.y;
+            }
+
+            update(speed) {
+                this.px = this.x;
+                this.py = this.y;
+                
+                // Advance closer to perspective origin
+                this.z -= speed;
+
+                // Reset when past viewport coordinate system
+                if (this.z <= 0) {
+                    this.reset();
+                    this.z = warpCanvas.width;
+                }
+            }
+
+            draw() {
+                // Calculate actual coordinates projected to flat screen
+                const sx = (this.x / this.z) * cx + cx;
+                const sy = (this.y / this.z) * cy + cy;
+
+                const psx = (this.px / (this.z + state.currentSpeed)) * cx + cx;
+                const psy = (this.py / (this.z + state.currentSpeed)) * cy + cy;
+
+                // Color based on active monotone theme
+                const strokeColor = state.theme === 'dark' 
+                    ? `rgba(235, 235, 235, ${Math.min(1.0, 1 - this.z / warpCanvas.width)})`
+                    : `rgba(55, 53, 47, ${Math.min(1.0, 1 - this.z / warpCanvas.width)})`;
+
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = Math.max(1, (1 - this.z / warpCanvas.width) * 2.5);
+                ctx.beginPath();
+                ctx.moveTo(psx, psy);
+                ctx.lineTo(sx, sy);
+                ctx.stroke();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < state.particleCount; i++) {
+                particles.push(new WarpParticle());
+            }
+        }
+        initParticles();
+
+        // Master Render Frame
+        function drawFrame() {
+            // Semi-transparent clears background subtly creating trailing trace warp effect
+            ctx.fillStyle = state.theme === 'dark' 
+                ? 'rgba(25, 25, 25, 0.25)' 
+                : 'rgba(251, 251, 250, 0.25)';
+            ctx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
+
+            // Smooth speed interpolator towards target speed
+            const targetSpeed = state.isHovered ? state.hoverWarpSpeed : state.idleWarpSpeed;
+            state.currentSpeed += (targetSpeed - state.currentSpeed) * 0.08;
+
+            particles.forEach(p => {
+                p.update(state.currentSpeed);
+                p.draw();
+            });
+
+            requestAnimationFrame(drawFrame);
+        }
+        drawFrame();
+
+        function updateTheme() {
+            if (state.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            localStorage.setItem('theme', state.theme);
+        }
+        updateTheme();
+
+        themeToggle.addEventListener('click', () => {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            updateTheme();
+        });
+
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.remove('translate-x-full');
+        });
+
+        closeSettings.addEventListener('click', () => {
+            settingsPanel.classList.add('translate-x-full');
+        });
+
+        particleSlider.addEventListener('input', (e) => {
+            const count = parseInt(e.target.value);
+            particleVal.textContent = count;
+            state.particleCount = count;
+            initParticles();
+        });
+
+        idleSpeedSlider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            idleSpeedVal.textContent = speed;
+            state.idleWarpSpeed = speed;
+        });
+
+        hoverSpeedSlider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            hoverSpeedVal.textContent = speed;
+            state.hoverWarpSpeed = speed;
+        });
+
+        btnLabelInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            state.buttonLabel = val;
+            btnLabel.textContent = val;
+        });
+
+        // Interactive 3D tilt interaction of standard card container
+        const handleTilt = (e) => {
+            const rect = widgetCard.getBoundingClientRect();
+            // Normalize cursor location within card boundary space
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+
+            // Constrain rotation thresholds
+            const degX = -(y / (rect.height / 2)) * 12; 
+            const degY = (x / (rect.width / 2)) * 12;
+
+            widgetCard.style.transform = `rotateX(${degX}deg) rotateY(${degY}deg) translateY(-4px)`;
+        };
+
+        const resetTilt = () => {
+            widgetCard.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
+        };
+
+        // Hook interaction listeners
+        tiltWrapper.addEventListener('mousemove', handleTilt);
+        tiltWrapper.addEventListener('mouseleave', resetTilt);
+
+        warpButton.addEventListener('mouseenter', (e) => {
+            state.isHovered = true;
+            // Apply slight button-specific expansion
+            warpButton.style.transform = 'scale(1.05)';
+        });
+
+        warpButton.addEventListener('mouseleave', () => {
+            state.isHovered = false;
+            warpButton.style.transform = 'scale(1)';
+        });
+
+        // Add gesture/touch alternative for non-mouse inputs
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        tiltWrapper.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            state.isHovered = true;
+        }, { passive: true });
+
+        tiltWrapper.addEventListener('touchend', () => {
+            state.isHovered = false;
+            resetTilt();
+        }, { passive: true });
+
+        tiltWrapper.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const dx = touch.clientX - touchStartX;
+                const dy = touch.clientY - touchStartY;
+                
+                // Translate swipe offsets into slight mock degrees
+                const degX = Math.max(-10, Math.min(10, -(dy / 5)));
+                const degY = Math.max(-10, Math.min(10, (dx / 5)));
+                
+                widgetCard.style.transform = `rotateX(${degX}deg) rotateY(${degY}deg) translateY(-2px)`;
+            }
+        }, { passive: true });
+
+        // Chrome simulator and target Youtube action execution sequence
+        warpButton.addEventListener('click', (e) => {
+            if (state.isRedirecting) return;
+            state.isRedirecting = true;
+
+            // Sound design synthesis - custom Tone/Sound simulator (using standard Oscillator context)
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Synth swoop pitch frequency
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                // Ramp frequency exponentially upwards for sci-fi warp effect
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1.2);
+                
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            } catch (err) {
+                console.log("Audio Engine could not launch on clicked input context state.", err);
+            }
+
+            // Material Ripple element rendering
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            
+            const rect = warpButton.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            warpButton.appendChild(ripple);
+            
+            setTimeout(() => { ripple.remove(); }, 600);
+
+            // Fetch the page URL simulation details
+            let currentUrl = "https://notion.so/workspace/widget_monolith";
+            try {
+                // If nested safely, extract parent origin window where possible
+                if (window.parent && window.parent.location !== window.location) {
+                    currentUrl = window.parent.location.href;
+                } else {
+                    currentUrl = window.location.href;
+                }
+            } catch (err) {
+                currentUrl = window.location.host || "http://localhost:8080";
+            }
+            tabUrlText.textContent = currentUrl;
+
+            // Force high canvas velocity on click
+            state.hoverWarpSpeed = 45;
+            state.isHovered = true;
+
+            // Transition Overlay appearance step
+            setTimeout(() => {
+                loaderOverlay.classList.remove('pointer-events-none');
+                loaderOverlay.classList.remove('scale-105', 'opacity-0');
+                loaderOverlay.classList.add('opacity-100', 'scale-100');
+                
+                // Initiate status update cycle and progress completion
+                runSimulatedLoaderSequence();
+            }, 600);
+        });
+
+        // Simulation details & timeline sequence before YouTube Redirection
+        const statuses = [
+            { text: "Capturing current DOM context...", delay: 0, progress: 15 },
+            { text: "Resolving metadata & caching host cache...", delay: 600, progress: 38 },
+            { text: "Pre-warming connection channels...", delay: 1300, progress: 65 },
+            { text: "Connecting to secure target youtube.com...", delay: 2000, progress: 90 },
+            { text: "Initiating transition window.location...", delay: 2700, progress: 100 }
+        ];
+
+        function runSimulatedLoaderSequence() {
+            statuses.forEach(step => {
+                setTimeout(() => {
+                    loaderStatus.textContent = step.text;
+                    progressBar.style.width = `${step.progress}%`;
+                    
+                    // On complete, perform target redirection on active window context
+                    if (step.progress === 100) {
+                        setTimeout(() => {
+                            window.location.href = "https://www.youtube.com";
+                        }, 500);
+                    }
+                }, step.delay);
+            });
+        }
+    </script>
+</body>
+</html>
