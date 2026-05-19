@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akasha Economic Simulator</title>
+    <!-- Importing Genshin-like elegant fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Genshin Impact Core Theme Colors */
+            --bg-color: #1a1e29;
+            --panel-bg: rgba(30, 36, 50, 0.75);
+            --panel-border: #d4af37;
+            --gold-light: #fcd34d;
+            --gold-dark: #b48608;
+            --text-main: #faf5eb;
+            --text-muted: #a1a1aa;
+            --highlight: #60a5fa;
+
+            /* Dynamic City Animation Variables (Default State) */
+            --sky-top: #1e3a8a;
+            --sky-bottom: #7dd3fc;
+            --sun-y: 100px;
+            --sun-color: #fde047;
+            --sun-glow: rgba(253, 224, 71, 0.5);
+            --moon-opacity: 0;
+            --star-opacity: 0;
+            --cloud-color: #ffffff;
+            --cloud-opacity: 0.8;
+            --mountain-color: #475569;
+            --build-bg: #334155;
+            --build-fg: #1e293b;
+            --window-color: #fde047;
+            --window-glow: 0 0 10px rgba(253, 224, 71, 0.6);
+            --pollution-opacity: 0;
+            --pollution-color: #854d0e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at top right, rgba(30, 58, 138, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at bottom left, rgba(180, 134, 8, 0.1) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Widget Container */
+        .widget-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 
+                        inset 0 0 20px rgba(212, 175, 55, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        /* Elaborate Corner Decorations */
+        .widget-container::before, .widget-container::after {
+            content: '✦';
+            position: absolute;
+            color: var(--gold-light);
+            font-size: 24px;
+            opacity: 0.8;
+        }
+        .widget-container::before { top: 10px; left: 15px; }
+        .widget-container::after { top: 10px; right: 15px; }
+
+        .corner-bottom-left, .corner-bottom-right {
+            position: absolute;
+            color: var(--gold-light);
+            font-size: 24px;
+            opacity: 0.8;
+            bottom: 10px;
+        }
+        .corner-bottom-left { left: 15px; }
+        .corner-bottom-right { right: 15px; }
+
+        /* Header Styling */
+        header {
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            color: var(--gold-light);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(252, 211, 77, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        h1::before, h1::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--gold-light), transparent);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* City Display SVG Area */
+        .city-view-wrapper {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            background: #000;
+        }
+
+        .city-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* SVG Dynamic Transitions */
+        .sky-grad-top, .sky-grad-bottom, 
+        .sun-moon, .mountain, 
+        .building-bg, .building-fg, 
+        .window, .cloud, .pollution-layer {
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animations */
+        @keyframes drift {
+            0% { transform: translateX(-5%); }
+            50% { transform: translateX(5%); }
+            100% { transform: translateX(-5%); }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .cloud-group { animation: drift 20s infinite ease-in-out; }
+        .star { animation: twinkle 3s infinite ease-in-out; }
+        .star:nth-child(even) { animation-duration: 4s; animation-delay: 1s; }
+
+        /* State Info Panel */
+        .state-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .state-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--gold-light);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            transition: color 0.5s;
+        }
+
+        .state-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        /* Controls Section */
+        .controls-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        /* Interactive Card */
+        .control-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .control-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--gold-light);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15);
+        }
+
+        .card-icon {
+            font-size: 24px;
+            color: var(--gold-light);
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(252, 211, 77, 0.5);
+        }
+
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(252, 211, 77, 0.3);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Custom Slider (Genshin Style) */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            box-shadow: 0 0 10px var(--gold-light), inset 0 0 5px #fff;
+            border: 2px solid #fff;
+            transform: rotate(45deg); /* Diamond shape */
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: rotate(45deg) scale(1.2);
+            box-shadow: 0 0 15px var(--gold-light), inset 0 0 8px #fff;
+        }
+
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--gold-light), inset 0 0 5px #fff;
+            border: 2px solid #fff;
+            transform: rotate(45deg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .controls-container {
+                grid-template-columns: 1fr;
+            }
+            .widget-container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <div class="corner-bottom-left">✦</div>
+    <div class="corner-bottom-right">✦</div>
+
+    <header>
+        <h1>Akasha Economic Simulator</h1>
+        <div class="subtitle">Adjust the parameters to reveal the fate of the city</div>
+    </header>
+
+    <!-- City Animation View -->
+    <div class="city-view-wrapper">
+        <svg class="city-svg" viewBox="0 0 1000 300" preserveAspectRatio="none">
+            <defs>
+                <!-- Sky Gradient -->
+                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:var(--sky-top); transition: stop-color 1.5s;" />
+                    <stop offset="100%" style="stop-color:var(--sky-bottom); transition: stop-color 1.5s;" />
+                </linearGradient>
+                <!-- Sun/Moon Glow -->
+                <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" style="stop-color:var(--sun-color); stop-opacity:1; transition: stop-color 1.5s;" />
+                    <stop offset="40%" style="stop-color:var(--sun-glow); stop-opacity:0.8; transition: stop-color 1.5s;" />
+                    <stop offset="100%" style="stop-color:var(--sun-glow); stop-opacity:0; transition: stop-color 1.5s;" />
+                </radialGradient>
+            </defs>
+
+            <!-- Sky Background -->
+            <rect width="1000" height="300" fill="url(#skyGrad)" />
+
+            <!-- Stars (Visible in night states) -->
+            <g style="opacity: var(--star-opacity); transition: opacity 1.5s;">
+                <circle class="star" cx="150" cy="50" r="1.5" fill="#fff" />
+                <circle class="star" cx="250" cy="80" r="2" fill="#fff" />
+                <circle class="star" cx="350" cy="30" r="1" fill="#fff" />
+                <circle class="star" cx="480" cy="60" r="1.5" fill="#fff" />
+                <circle class="star" cx="600" cy="20" r="2" fill="#fff" />
+                <circle class="star" cx="750" cy="70" r="1.5" fill="#fff" />
+                <circle class="star" cx="850" cy="40" r="2" fill="#fff" />
+                <circle class="star" cx="920" cy="90" r="1" fill="#fff" />
+            </g>
+
+            <!-- Celestial Body (Sun/Moon) -->
+            <circle class="sun-moon" cx="500" cy="var(--sun-y)" r="40" fill="url(#sunGlow)" />
+            
+            <!-- Moon Overlay (For crescent effect) -->
+            <circle class="sun-moon" cx="515" cy="calc(var(--sun-y) - 10px)" r="35" fill="var(--sky-top)" style="opacity: var(--moon-opacity);" />
+
+            <!-- Pollution / Fog Layer -->
+            <rect width="1000" height="300" fill="var(--pollution-color)" style="opacity: var(--pollution-opacity); mix-blend-mode: multiply;" />
+
+            <!-- Background Mountains -->
+            <path class="mountain" d="M0,300 L0,180 L150,120 L300,190 L450,130 L650,210 L800,110 L1000,170 L1000,300 Z" fill="var(--mountain-color)" />
+
+            <!-- Clouds -->
+            <g class="cloud-group" style="opacity: var(--cloud-opacity); fill: var(--cloud-color);">
+                <path class="cloud" d="M 100 100 Q 120 80 140 100 Q 160 90 180 110 Q 160 120 140 120 Q 120 120 100 100 Z" />
+                <path class="cloud" d="M 300 130 Q 330 100 370 130 Q 400 120 420 140 Q 380 160 350 150 Q 320 160 300 130 Z" />
+                <path class="cloud" d="M 700 80 Q 730 50 760 80 Q 790 70 810 90 Q 780 100 750 90 Q 720 100 700 80 Z" />
+                <path class="cloud" d="M 850 140 Q 870 120 890 140 Q 910 130 930 150 Q 910 160 890 160 Q 870 160 850 140 Z" />
+            </g>
+
+            <!-- City Layer 1 (Background Buildings) -->
+            <g fill="var(--build-bg)" class="building-bg">
+                <rect x="50" y="160" width="60" height="140" />
+                <rect x="130" y="140" width="80" height="160" />
+                <rect x="230" y="180" width="50" height="120" />
+                <rect x="300" y="120" width="70" height="180" />
+                <polygon points="300,120 335,80 370,120" />
+                <rect x="400" y="150" width="90" height="150" />
+                <rect x="520" y="130" width="60" height="170" />
+                <rect x="610" y="170" width="80" height="130" />
+                <rect x="720" y="110" width="60" height="190" />
+                <polygon points="720,110 750,60 780,110" />
+                <rect x="810" y="160" width="70" height="140" />
+                <rect x="900" y="140" width="50" height="160" />
+            </g>
+
+            <!-- City Layer 2 (Foreground Buildings) -->
+            <g fill="var(--build-fg)" class="building-fg">
+                <!-- Building 1 -->
+                <rect x="80" y="190" width="70" height="110" />
+                <rect x="90" y="170" width="50" height="20" />
+                <!-- Building 2 -->
+                <rect x="180" y="210" width="90" height="90" />
+                <!-- Building 3 (Tower) -->
+                <rect x="310" y="160" width="80" height="140" />
+                <polygon points="300,160 350,130 390,160" />
+                <!-- Building 4 -->
+                <rect x="430" y="200" width="100" height="100" />
+                <!-- Building 5 (Tall Skyscraper) -->
+                <rect x="560" y="150" width="70" height="150" />
+                <rect x="575" y="110" width="40" height="40" />
+                <rect x="590" y="70" width="10" height="40" />
+                <!-- Building 6 -->
+                <rect x="670" y="190" width="80" height="110" />
+                <!-- Building 7 -->
+                <rect x="780" y="180" width="90" height="120" />
+                <polygon points="780,180 825,150 870,180" />
+                <!-- Building 8 -->
+                <rect x="890" y="210" width="80" height="90" />
+            </g>
+
+            <!-- Windows (Dynamic glow) -->
+            <g fill="var(--window-color)" style="box-shadow: var(--window-glow);" class="window">
+                <!-- B1 -->
+                <rect x="95" y="210" width="10" height="15" />
+                <rect x="125" y="210" width="10" height="15" />
+                <rect x="95" y="240" width="10" height="15" />
+                <rect x="125" y="270" width="10" height="15" />
+                <!-- B2 -->
+                <rect x="195" y="230" width="15" height="10" />
+                <rect x="225" y="230" width="15" height="10" />
+                <rect x="195" y="260" width="15" height="10" />
+                <rect x="240" y="280" width="15" height="10" />
+                <!-- B3 -->
+                <rect x="330" y="180" width="10" height="20" />
+                <rect x="360" y="180" width="10" height="20" />
+                <rect x="330" y="220" width="10" height="20" />
+                <rect x="360" y="220" width="10" height="20" />
+                <rect x="330" y="260" width="10" height="20" />
+                <rect x="360" y="260" width="10" height="20" />
+                <!-- B4 -->
+                <rect x="450" y="220" width="20" height="10" />
+                <rect x="490" y="220" width="20" height="10" />
+                <rect x="450" y="250" width="20" height="10" />
+                <rect x="490" y="270" width="20" height="10" />
+                <!-- B5 (Skyscraper) -->
+                <rect x="575" y="170" width="8" height="15" />
+                <rect x="590" y="170" width="8" height="15" />
+                <rect x="605" y="170" width="8" height="15" />
+                <rect x="575" y="200" width="8" height="15" />
+                <rect x="605" y="200" width="8" height="15" />
+                <rect x="575" y="230" width="8" height="15" />
+                <rect x="590" y="230" width="8" height="15" />
+                <rect x="605" y="230" width="8" height="15" />
+                <rect x="575" y="260" width="8" height="15" />
+                <rect x="590" y="260" width="8" height="15" />
+                <rect x="605" y="260" width="8" height="15" />
+                <!-- B6 -->
+                <rect x="690" y="210" width="12" height="12" />
+                <rect x="720" y="210" width="12" height="12" />
+                <rect x="690" y="240" width="12" height="12" />
+                <rect x="720" y="260" width="12" height="12" />
+                <!-- B7 -->
+                <rect x="800" y="200" width="15" height="15" />
+                <rect x="830" y="200" width="15" height="15" />
+                <rect x="815" y="230" width="15" height="15" />
+                <rect x="800" y="260" width="15" height="15" />
+                <rect x="830" y="260" width="15" height="15" />
+                <!-- B8 -->
+                <rect x="910" y="230" width="40" height="10" />
+                <rect x="910" y="250" width="40" height="10" />
+                <rect x="910" y="270" width="40" height="10" />
+            </g>
+        </svg>
+    </div>
+
+    <!-- Informational Panel -->
+    <div class="state-panel">
+        <div class="state-title" id="stateName">Balanced Republic</div>
+        <div class="state-desc" id="stateDesc">Moderate policies maintain a steady, unexceptional equilibrium. The city slumbers in peace.</div>
+    </div>
+
+    <!-- Controllers -->
+    <div class="controls-container">
+        
+        <!-- Income Tax Card -->
+        <div class="control-card">
+            <div class="card-icon">✦</div>
+            <div class="card-title">Income Tax</div>
+            <div class="card-value"><span id="val-income">50</span>%</div>
+            <input type="range" id="slider-income" min="0" max="100" value="50">
+        </div>
+
+        <!-- Corporate Tax Card -->
+        <div class="control-card">
+            <div class="card-icon">✦</div>
+            <div class="card-title">Corporate Tax</div>
+            <div class="card-value"><span id="val-corp">50</span>%</div>
+            <input type="range" id="slider-corp" min="0" max="100" value="50">
+        </div>
+
+        <!-- Public Spending Card -->
+        <div class="control-card">
+            <div class="card-icon">✦</div>
+            <div class="card-title">Public Spending</div>
+            <div class="card-value"><span id="val-spend">50</span>%</div>
+            <input type="range" id="slider-spend" min="0" max="100" value="50">
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /**
+     * Akasha Economic Simulator - Logic Script
+     * Maps 3 variables (0-100) into 12 distinct socioeconomic states.
+     */
+
+    // DOM Elements
+    const slIncome = document.getElementById('slider-income');
+    const slCorp = document.getElementById('slider-corp');
+    const slSpend = document.getElementById('slider-spend');
+    
+    const valIncome = document.getElementById('val-income');
+    const valCorp = document.getElementById('val-corp');
+    const valSpend = document.getElementById('val-spend');
+
+    const stateNameEl = document.getElementById('stateName');
+    const stateDescEl = document.getElementById('stateDesc');
+    const root = document.documentElement;
+
+    let currentStateIndex = -1;
+
+    // The 12 Archetypal States Definitions
+    // Contains visual aesthetic variables for the SVG city map.
+    const statesData = {
+        1: {
+            name: "Anarcho-Capitalist Wastes",
+            desc: "Without taxes or spending, infrastructure crumbles. The skies are choked with dust, and only the ruthless thrive in the shadows.",
+            theme: {
+                skyTop: "#292524", skyBottom: "#78716c", sunY: "250px", sunColor: "#ef4444", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#44403c", cloudOpacity: 1, 
+                mountainColor: "#1c1917", buildBg: "#0c0a09", buildFg: "#000000", 
+                windowColor: "#b91c1c", pollutionOpacity: 0.6, pollutionColor: "#78350f"
+            }
+        },
+        2: {
+            name: "Reckless Deficit",
+            desc: "Massive public spending with no tax revenue causes hyperinflation. The city burns bright with borrowed money as the economic sun sets.",
+            theme: {
+                skyTop: "#7f1d1d", skyBottom: "#ea580c", sunY: "150px", sunColor: "#f97316", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#fca5a5", cloudOpacity: 0.8, 
+                mountainColor: "#450a0a", buildBg: "#2e1065", buildFg: "#172554", 
+                windowColor: "#fcd34d", pollutionOpacity: 0.3, pollutionColor: "#991b1b"
+            }
+        },
+        3: {
+            name: "Socialist Utopia",
+            desc: "High taxes fuel unprecedented public welfare. The city gleams under a pristine sky, a monument to collective prosperity and harmony.",
+            theme: {
+                skyTop: "#06b6d4", skyBottom: "#6ee7b7", sunY: "80px", sunColor: "#fef08a", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#ffffff", cloudOpacity: 0.9, 
+                mountainColor: "#0f766e", buildBg: "#0ea5e9", buildFg: "#0284c7", 
+                windowColor: "#ffffff", pollutionOpacity: 0, pollutionColor: "#000000"
+            }
+        },
+        4: {
+            name: "Stagnant Bureaucracy",
+            desc: "Heavy taxation with minimal public return. The sky is perpetually overcast, casting a gloomy shadow over unmaintained grey monoliths.",
+            theme: {
+                skyTop: "#475569", skyBottom: "#94a3b8", sunY: "350px", sunColor: "#cbd5e1", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#64748b", cloudOpacity: 1, 
+                mountainColor: "#334155", buildBg: "#1e293b", buildFg: "#0f172a", 
+                windowColor: "#334155", pollutionOpacity: 0.4, pollutionColor: "#475569"
+            }
+        },
+        5: {
+            name: "Corporate Oligarchy",
+            desc: "The working class is heavily taxed while corporations roam free. Neon signs piece the dystopian night sky, owned by the elite few.",
+            theme: {
+                skyTop: "#020617", skyBottom: "#1e1b4b", sunY: "80px", sunColor: "#a855f7", 
+                moonOpacity: 1, starOpacity: 1, cloudColor: "#312e81", cloudOpacity: 0.6, 
+                mountainColor: "#000000", buildBg: "#0f172a", buildFg: "#020617", 
+                windowColor: "#a855f7", pollutionOpacity: 0.5, pollutionColor: "#c026d3"
+            }
+        },
+        6: {
+            name: "Merchant's Haven",
+            desc: "Low income tax attracts workers, while moderate corporate taxes keep the state afloat. A starry, peaceful night embraces a bustling trade hub.",
+            theme: {
+                skyTop: "#0f172a", skyBottom: "#1d4ed8", sunY: "60px", sunColor: "#e2e8f0", 
+                moonOpacity: 1, starOpacity: 1, cloudColor: "#1e3a8a", cloudOpacity: 0.4, 
+                mountainColor: "#1e293b", buildBg: "#1e40af", buildFg: "#1e3a8a", 
+                windowColor: "#60a5fa", pollutionOpacity: 0, pollutionColor: "#000000"
+            }
+        },
+        7: {
+            name: "Welfare Trap",
+            desc: "High income tax funds welfare, but corporations flee. Citizens rely entirely on the state in a tranquil but economically stagnant twilight.",
+            theme: {
+                skyTop: "#4c1d95", skyBottom: "#a21caf", sunY: "180px", sunColor: "#fbcfe8", 
+                moonOpacity: 0, starOpacity: 0.5, cloudColor: "#701a75", cloudOpacity: 0.7, 
+                mountainColor: "#3b0764", buildBg: "#4a044e", buildFg: "#2e1065", 
+                windowColor: "#f0abfc", pollutionOpacity: 0.2, pollutionColor: "#4c1d95"
+            }
+        },
+        8: {
+            name: "Technocratic Rule",
+            desc: "Corporations are heavily taxed to fund massive technological public works. The city glows with cold, efficient cyan energy under a sterile sky.",
+            theme: {
+                skyTop: "#082f49", skyBottom: "#064e3b", sunY: "100px", sunColor: "#2dd4bf", 
+                moonOpacity: 1, starOpacity: 0.8, cloudColor: "#022c22", cloudOpacity: 0.5, 
+                mountainColor: "#020617", buildBg: "#0f766e", buildFg: "#065f46", 
+                windowColor: "#5eead4", pollutionOpacity: 0, pollutionColor: "#000000"
+            }
+        },
+        9: {
+            name: "The Golden Era",
+            desc: "A perfect balance of moderate taxation and high public investment. The city basks in the warm glow of a golden afternoon, radiating prosperity.",
+            theme: {
+                skyTop: "#ea580c", skyBottom: "#fde047", sunY: "120px", sunColor: "#ffffff", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#fef08a", cloudOpacity: 0.6, 
+                mountainColor: "#b45309", buildBg: "#d97706", buildFg: "#92400e", 
+                windowColor: "#fef08a", pollutionOpacity: 0, pollutionColor: "#000000"
+            }
+        },
+        10: {
+            name: "Industrial Boom",
+            desc: "Corporate focus with low public spending leads to massive industrial output. The sky is yellowed with smog, but the factories never sleep.",
+            theme: {
+                skyTop: "#a16207", skyBottom: "#facc15", sunY: "200px", sunColor: "#fef08a", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#854d0e", cloudOpacity: 0.9, 
+                mountainColor: "#713f12", buildBg: "#422006", buildFg: "#291304", 
+                windowColor: "#fde047", pollutionOpacity: 0.7, pollutionColor: "#a16207"
+            }
+        },
+        11: {
+            name: "Impoverished Slums",
+            desc: "High taxes choke both workers and businesses, with middling returns. The city sits in darkness, a dilapidated husk of its former glory.",
+            theme: {
+                skyTop: "#171717", skyBottom: "#404040", sunY: "400px", sunColor: "#000000", 
+                moonOpacity: 0, starOpacity: 0.2, cloudColor: "#262626", cloudOpacity: 0.8, 
+                mountainColor: "#0a0a0a", buildBg: "#171717", buildFg: "#000000", 
+                windowColor: "#525252", pollutionOpacity: 0.5, pollutionColor: "#171717"
+            }
+        },
+        12: {
+            name: "Balanced Republic",
+            desc: "Moderate policies across the board maintain a steady, unexceptional equilibrium. The city slumbers in peace beneath a clear blue sky.",
+            theme: {
+                skyTop: "#1e3a8a", skyBottom: "#7dd3fc", sunY: "100px", sunColor: "#fde047", 
+                moonOpacity: 0, starOpacity: 0, cloudColor: "#ffffff", cloudOpacity: 0.8, 
+                mountainColor: "#475569", buildBg: "#334155", buildFg: "#1e293b", 
+                windowColor: "#fde047", pollutionOpacity: 0, pollutionColor: "#000000"
+            }
+        }
+    };
+
+    /**
+     * Categorize a 0-100 value into Low (L), Mid (M), High (H)
+     */
+    function getLevel(val) {
+        if (val <= 33) return 'L';
+        if (val <= 66) return 'M';
+        return 'H';
+    }
+
+    /**
+     * Map the 27 possible combinations of (L, M, H) to the 12 States
+     */
+    const logicMatrix = {
+        // L Income
+        'L-L-L': 1, 'L-L-M': 12, 'L-L-H': 2,
+        'L-M-L': 1, 'L-M-M': 12, 'L-M-H': 2,
+        'L-H-L': 6, 'L-H-M': 6,  'L-H-H': 8,
+
+        // M Income
+        'M-L-L': 1, 'M-L-M': 12, 'M-L-H': 2,
+        'M-M-L': 10,'M-M-M': 12, 'M-M-H': 9,
+        'M-H-L': 4, 'M-H-M': 10, 'M-H-H': 3,
+
+        // H Income
+        'H-L-L': 5, 'H-L-M': 5,  'H-L-H': 7,
+        'H-M-L': 4, 'H-M-M': 11, 'H-M-H': 3,
+        'H-H-L': 4, 'H-H-M': 11, 'H-H-H': 3
+    };
+
+    /**
+     * Update the SVG UI CSS Variables based on state theme
+     */
+    function applyTheme(theme) {
+        root.style.setProperty('--sky-top', theme.skyTop);
+        root.style.setProperty('--sky-bottom', theme.skyBottom);
+        root.style.setProperty('--sun-y', theme.sunY);
+        root.style.setProperty('--sun-color', theme.sunColor);
+        root.style.setProperty('--moon-opacity', theme.moonOpacity);
+        root.style.setProperty('--star-opacity', theme.starOpacity);
+        root.style.setProperty('--cloud-color', theme.cloudColor);
+        root.style.setProperty('--cloud-opacity', theme.cloudOpacity);
+        root.style.setProperty('--mountain-color', theme.mountainColor);
+        root.style.setProperty('--build-bg', theme.buildBg);
+        root.style.setProperty('--build-fg', theme.buildFg);
+        root.style.setProperty('--window-color', theme.windowColor);
+        root.style.setProperty('--pollution-opacity', theme.pollutionOpacity);
+        root.style.setProperty('--pollution-color', theme.pollutionColor);
+        
+        // Add text flash effect
+        stateNameEl.style.color = "#ffffff";
+        setTimeout(() => {
+            stateNameEl.style.color = "var(--gold-light)";
+        }, 300);
+    }
+
+    /**
+     * Main evaluation function triggered on slider change
+     */
+    function evaluateEconomy() {
+        const inc = parseInt(slIncome.value);
+        const corp = parseInt(slCorp.value);
+        const spend = parseInt(slSpend.value);
+
+        // Update Text displays
+        valIncome.innerText = inc;
+        valCorp.innerText = corp;
+        valSpend.innerText = spend;
+
+        // Determine Levels
+        const comboKey = `${getLevel(inc)}-${getLevel(corp)}-${getLevel(spend)}`;
+        
+        // Find corresponding state (fallback to 12 if somehow undefined)
+        const stateId = logicMatrix[comboKey] || 12;
+
+        if (currentStateIndex !== stateId) {
+            currentStateIndex = stateId;
+            const stateObj = statesData[stateId];
+            
+            // Update Text
+            stateNameEl.innerText = `✦ ${stateObj.name} ✦`;
+            stateDescEl.innerText = stateObj.desc;
+            
+            // Update Visuals
+            applyTheme(stateObj.theme);
+        }
+    }
+
+    // Event Listeners for smooth real-time update
+    slIncome.addEventListener('input', evaluateEconomy);
+    slCorp.addEventListener('input', evaluateEconomy);
+    slSpend.addEventListener('input', evaluateEconomy);
+
+    // Initialize
+    evaluateEconomy();
+
+</script>
+
+</body>
+</html>
