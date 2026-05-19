@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive General Statistics Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Color Palette from Image */
+            --bg-main: #f5f6fa;
+            --text-dark: #2A2A3C;
+            --text-muted: #8A8D9F;
+            --accent-purple: #7B5AF3;
+            --accent-pink: #F47DB4;
+            --accent-blue: #4A83ED;
+            --accent-green: #34C759;
+            --accent-red: #FF3B30;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02);
+            --border-light: rgba(255, 255, 255, 0.5);
+            
+            /* Animation timings */
+            --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --warp-ease: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(123, 90, 243, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(244, 125, 180, 0.05) 0%, transparent 40%);
+        }
+
+        /* Container & Layout */
+        .dashboard {
+            width: 1400px;
+            height: 800px;
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 40px;
+            padding: 40px;
+            position: relative;
+        }
+
+        /* Ambient Background Glows inside dashboard */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Common Interactive Elements */
+        .interactive-warp {
+            transition: transform 0.4s var(--spring-bounce), box-shadow 0.4s var(--warp-ease);
+            cursor: pointer;
+        }
+        
+        .interactive-warp:hover {
+            transform: scale(1.05) skewX(-2deg);
+        }
+
+        .interactive-warp:active {
+            transform: scale(0.95) skewX(2deg);
+        }
+
+        /* ================= LEFT COLUMN ================= */
+        .col-left {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .main-title {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+        .main-title:hover { transform: scaleX(1.05); }
+
+        .stat-block h3 { font-size: 1rem; color: var(--text-dark); font-weight: 600; }
+        .stat-block p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+        .stat-block .big-number { font-size: 2.5rem; font-weight: 600; color: var(--text-dark); margin: 5px 0; }
+
+        .btn-details {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 10px 20px rgba(123, 90, 243, 0.3);
+        }
+
+        .mini-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-light);
+            backdrop-filter: blur(10px);
+        }
+
+        .list-quantity ul { list-style: none; }
+        .list-quantity li {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .list-quantity li:hover {
+            transform: translateX(10px) scale(1.05);
+            color: var(--text-dark);
+        }
+        .list-quantity li span:last-child { font-weight: 600; color: var(--text-dark); }
+        .list-quantity li .dot {
+            display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ddd; margin-right: 8px;
+        }
+
+        .mini-chart-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .bars { display: flex; gap: 4px; height: 40px; align-items: flex-end;}
+        .bar { 
+            width: 4px; background: var(--accent-purple); border-radius: 2px;
+            transition: height 0.5s var(--spring-bounce), transform 0.2s;
+            transform-origin: bottom;
+        }
+        .bar:nth-child(even) { background: var(--accent-pink); }
+        .bars:hover .bar { transform: scaleY(1.5); }
+        
+        /* ================= CENTER COLUMN (RADAR GRAPH) ================= */
+        .col-center {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.4s var(--spring-bounce);
+        }
+        .filter-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 10px rgba(74, 131, 237, 0.4);
+        }
+        .filter-btn:not(.active):hover {
+            transform: translateY(-3px) scale(1.1);
+            color: var(--text-dark);
+        }
+
+        /* Radar Chart Wrapper */
+        .radar-container {
+            width: 600px;
+            height: 600px;
+            position: relative;
+            /* Subtly float */
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* SVG Radar styling */
+        svg.radar-chart {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .radar-grid { stroke: rgba(0,0,0,0.04); stroke-width: 1.5; fill: none; }
+        .radar-axis { stroke: rgba(0,0,0,0.06); stroke-width: 1.5; stroke-dasharray: 4 4; }
+        
+        .radar-path {
+            fill: none;
+            stroke-width: 3;
+            transition: d 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .radar-path.blue { stroke: var(--accent-blue); fill: rgba(74, 131, 237, 0.05); }
+        .radar-path.pink { stroke: var(--accent-pink); fill: rgba(244, 125, 180, 0.05); }
+
+        .radar-point {
+            cursor: grab;
+            transition: r 0.2s, stroke-width 0.2s;
+        }
+        .radar-point:active { cursor: grabbing; }
+        .radar-point.blue { fill: #fff; stroke: var(--accent-blue); stroke-width: 2; }
+        .radar-point.pink { fill: #fff; stroke: var(--accent-pink); stroke-width: 2; }
+        .radar-point:hover { r: 8; stroke-width: 4; }
+
+        /* Labels for Radar */
+        .radar-labels {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .radar-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            transition: all 0.5s var(--spring-bounce);
+        }
+        .radar-label .name { font-size: 0.8rem; color: var(--text-muted); }
+        .radar-label .val { font-size: 1rem; font-weight: 600; color: var(--text-dark); transition: transform 0.3s; }
+        
+        /* Interactive Warp on Chart Hover */
+        .radar-container:hover .radar-label {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* ================= RIGHT COLUMN (DATABASE CARD) ================= */
+        .col-right {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-end;
+            perspective: 1000px; /* Crucial for 3D warping */
+        }
+
+        .header-stats { text-align: right; margin-bottom: 20px; }
+        .header-stats p { font-size: 0.85rem; color: var(--text-muted); }
+        .header-stats h2 { font-size: 1.8rem; font-weight: 600; }
+        
+        /* The Database Card */
+        .db-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            width: 320px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(255,255,255,0.5);
+            backdrop-filter: blur(20px);
+            transform-style: preserve-3d;
+            transition: transform 0.1s; /* JS handles the actual rotation */
+            position: relative;
+        }
+
+        /* Donut Chart Area */
+        .donut-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px auto;
+            transform: translateZ(30px); /* Pops out in 3D */
+            transition: transform 0.5s var(--spring-bounce);
+        }
+        .db-card:hover .donut-container {
+            transform: translateZ(50px) scale(1.1);
+        }
+        
+        svg.donut { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .donut-bg { fill: none; stroke: #f0f0f5; stroke-width: 8; }
+        .donut-segment {
+            fill: none; stroke-width: 8; stroke-linecap: round;
+            transition: stroke-dasharray 1s var(--spring-bounce);
+        }
+        .donut-pink { stroke: var(--accent-pink); }
+        .donut-orange { stroke: #FF9500; }
+        .donut-blue { stroke: var(--accent-blue); }
+
+        .donut-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: #f4f6fa;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .db-card-title {
+            text-align: center;
+            transform: translateZ(20px);
+        }
+        .db-card-title h3 { font-size: 1rem; color: var(--text-dark); font-weight: 500; }
+        .db-card-title h2 { font-size: 1.5rem; font-weight: 600; margin: 5px 0 20px 0; }
+
+        /* List Items inside DB Card */
+        .detailed-list {
+            list-style: none;
+            transform: translateZ(10px);
+        }
+        
+        .detailed-list li {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 20px;
+            align-items: center;
+            padding: 10px 5px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.3s var(--warp-ease);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hover Warping effect for Database rows */
+        .detailed-list li::before {
+            content: '';
+            position: absolute;
+            left: -100%;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(123, 90, 243, 0.1), transparent);
+            transition: left 0.4s;
+            z-index: -1;
+        }
+
+        .detailed-list li:hover {
+            transform: scale(1.05) translateX(-10px);
+            color: var(--text-dark);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            border-bottom-color: transparent;
+        }
+        
+        .detailed-list li:hover::before { left: 100%; }
+
+        .detailed-list li span:nth-child(2) { text-align: right; padding-right: 10px;}
+        .detailed-list li span:nth-child(3) { font-weight: 600; color: var(--text-dark); text-align: right;}
+        .detailed-list li .trend { text-align: right; font-size: 0.7rem; }
+        .trend.up { color: var(--accent-green); }
+        .trend.down { color: var(--accent-red); }
+
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="ambient-glow"></div>
+
+    <!-- LEFT COLUMN -->
+    <div class="col-left">
+        <h1 class="main-title">General statistics</h1>
+        
+        <div class="stat-block">
+            <h3>Total system load</h3>
+            <p>All figures are normal</p>
+            <button class="btn-details interactive-warp">Details</button>
+        </div>
+
+        <div class="stat-block" style="margin-top: 10px;">
+            <p>All figures are normal</p>
+            <div class="big-number interactive-warp">$98,642</div>
+        </div>
+
+        <div class="mini-card list-quantity interactive-warp">
+            <h3 style="font-size: 0.9rem; margin-bottom: 15px;">Quantity of data</h3>
+            <ul>
+                <li><span><span class="dot"></span>Business</span> <span>324</span> <span>1,540</span></li>
+                <li><span><span class="dot"></span>Finance</span> <span>311</span> <span>1,328</span></li>
+                <li><span><span class="dot"></span>Travel</span> <span>300</span> <span>1,219</span></li>
+                <li><span><span class="dot"></span>Presentation</span> <span>289</span> <span>993</span></li>
+                <li><span><span class="dot"></span>Startup</span> <span>276</span> <span>896</span></li>
+                <li><span><span class="dot"></span>Development</span> <span>273</span> <span>880</span></li>
+                <li><span><span class="dot"></span>Design</span> <span>223</span> <span>686</span></li>
+                <li><span><span class="dot"></span>Product</span> <span>185</span> <span>559</span></li>
+            </ul>
+        </div>
+
+        <div class="mini-card mini-chart-card interactive-warp">
+            <div class="bars">
+                <div class="bar" style="height: 60%;"></div>
+                <div class="bar" style="height: 80%;"></div>
+                <div class="bar" style="height: 40%;"></div>
+                <div class="bar" style="height: 90%;"></div>
+                <div class="bar" style="height: 50%;"></div>
+                <div class="bar" style="height: 70%;"></div>
+                <div class="bar" style="height: 100%;"></div>
+                <div class="bar" style="height: 60%;"></div>
+            </div>
+            <div>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Total earning</p>
+                <div style="font-weight: 600;">$12,875 <span class="trend up" style="font-size: 0.7rem; font-weight: 400;">▲ 10%</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER COLUMN -->
+    <div class="col-center">
+        <div class="filters">
+            <div class="filter-btn" onclick="randomizeData(this)">1W</div>
+            <div class="filter-btn" onclick="randomizeData(this)">1M</div>
+            <div class="filter-btn active" onclick="randomizeData(this)">3M</div>
+            <div class="filter-btn" onclick="randomizeData(this)">1Y</div>
+            <div class="filter-btn" onclick="randomizeData(this)">ALL</div>
+        </div>
+
+        <div class="radar-container" id="radarContainer">
+            <svg class="radar-chart" id="radarSvg" viewBox="0 0 500 500">
+                <g id="radarGrid"></g>
+                <g id="radarAxes"></g>
+                <!-- Paths -->
+                <path id="pathBlue" class="radar-path blue" d=""></path>
+                <path id="pathPink" class="radar-path pink" d=""></path>
+                <!-- Draggable Nodes Group -->
+                <g id="radarNodes"></g>
+            </svg>
+            <div class="radar-labels" id="radarLabels">
+                <!-- Labels injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-right">
+        <div class="header-stats">
+            <p>last month<br>All figures are normal</p>
+            <h2 class="interactive-warp" style="transform-origin: right;">$12,875 <span class="trend up" style="font-size: 1rem; font-weight:400;">▲ 10%</span></h2>
+            <p style="font-size: 0.7rem; margin-top:5px;">Compared to $21,490 last year</p>
+        </div>
+
+        <!-- Transformative Database Card -->
+        <div class="db-card" id="dbCard">
+            
+            <div class="donut-container">
+                <svg class="donut" viewBox="0 0 100 100">
+                    <circle class="donut-bg" cx="50" cy="50" r="40"></circle>
+                    <circle class="donut-segment donut-pink" id="dSeg1" cx="50" cy="50" r="40" stroke-dasharray="100 151.3" stroke-dashoffset="0"></circle>
+                    <circle class="donut-segment donut-orange" id="dSeg2" cx="50" cy="50" r="30" stroke-dasharray="80 108.5" stroke-dashoffset="0"></circle>
+                    <circle class="donut-segment donut-blue" id="dSeg3" cx="50" cy="50" r="20" stroke-dasharray="60 65.6" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="donut-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+            </div>
+
+            <div class="db-card-title">
+                <h3>Total earning</h3>
+                <h2>$12,875 <span class="trend up" style="font-size:0.8rem; font-weight:400;">▲ 2%</span></h2>
+            </div>
+
+            <ul class="detailed-list">
+                <li><span>Travel</span> <span>780</span> <span>2,540</span> <span class="trend up">▲</span></li>
+                <li><span>Presentation</span> <span>650</span> <span>2,304</span> <span class="trend down">▼</span></li>
+                <li><span>Business</span> <span>612</span> <span>2,140</span> <span class="trend up">▲</span></li>
+                <li><span>Finance</span> <span>598</span> <span>1,976</span> <span class="trend up">▲</span></li>
+                <li><span>Travel</span> <span>513</span> <span>1,903</span> <span class="trend down">▼</span></li>
+                <li><span>Startup</span> <span>498</span> <span>1,320</span> <span class="trend down">▼</span></li>
+                <li><span>Develop</span> <span>476</span> <span>1,103</span> <span class="trend up">▲</span></li>
+                <li><span>Product</span> <span>412</span> <span>1,043</span> <span class="trend up">▲</span></li>
+                <li><span>Design</span> <span>389</span> <span>1,001</span> <span class="trend down">▼</span></li>
+                <li><span>Illustration</span> <span>350</span> <span>870</span> <span class="trend up">▲</span></li>
+                <li><span>Prototype</span> <span>321</span> <span>820</span> <span class="trend up">▲</span></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * INTERACTIVE RADAR CHART LOGIC
+     * Handles drawing, warping animations, and draggable nodes.
+     */
+    const RADAR_CX = 250;
+    const RADAR_CY = 250;
+    const MAX_RADIUS = 160;
+    const AXIS_COUNT = 6;
+    const LABELS = ["Startup", "Investment", "Development", "Product", "Business", "Design"];
+    
+    // Angles for 6 axes (starting from top, going clockwise)
+    const angles = [];
+    for (let i = 0; i < AXIS_COUNT; i++) {
+        angles.push((Math.PI * 2 * i / AXIS_COUNT) - Math.PI / 2);
+    }
+
+    // Dataset arrays (values 0 - 100)
+    let dataPink = [80, 95, 75, 85, 90, 80];
+    let dataBlue = [60, 45, 85, 55, 65, 50];
+
+    // SVG Elements
+    const svg = document.getElementById('radarSvg');
+    const gridGrp = document.getElementById('radarGrid');
+    const axesGrp = document.getElementById('radarAxes');
+    const nodesGrp = document.getElementById('radarNodes');
+    const pathPink = document.getElementById('pathPink');
+    const pathBlue = document.getElementById('pathBlue');
+    const labelsContainer = document.getElementById('radarLabels');
+
+    // Draw Background Grid (Concentric Hexagons)
+    const gridLevels = [0.2, 0.4, 0.6, 0.8, 1.0];
+    gridLevels.forEach(level => {
+        let pts = angles.map(angle => {
+            let x = RADAR_CX + MAX_RADIUS * level * Math.cos(angle);
+            let y = RADAR_CY + MAX_RADIUS * level * Math.sin(angle);
+            return `${x},${y}`;
+        }).join(" ");
+        let polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        polygon.setAttribute("points", pts);
+        polygon.setAttribute("class", "radar-grid");
+        
+        // Background alternating colors
+        if(level === 0.2 || level === 0.6 || level === 1.0) {
+            polygon.style.fill = "rgba(255,255,255,0.7)";
+        } else {
+            polygon.style.fill = "rgba(244, 246, 250, 0.5)";
+        }
+        gridGrp.appendChild(polygon);
+    });
+
+    // Draw Axes & Labels
+    angles.forEach((angle, i) => {
+        let x = RADAR_CX + MAX_RADIUS * Math.cos(angle);
+        let y = RADAR_CY + MAX_RADIUS * Math.sin(angle);
+        
+        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", RADAR_CX);
+        line.setAttribute("y1", RADAR_CY);
+        line.setAttribute("x2", x);
+        line.setAttribute("y2", y);
+        line.setAttribute("class", "radar-axis");
+        axesGrp.appendChild(line);
+
+        // Labels mapping (push them out further)
+        let lx = RADAR_CX + (MAX_RADIUS + 50) * Math.cos(angle);
+        let ly = RADAR_CY + (MAX_RADIUS + 30) * Math.sin(angle);
+        
+        let labelDiv = document.createElement('div');
+        labelDiv.className = 'radar-label';
+        labelDiv.style.left = `${(lx / 500) * 100}%`;
+        labelDiv.style.top = `${(ly / 500) * 100}%`;
+        
+        // Randomize initial money format based on dataset
+        let valStr = `$${(Math.floor(Math.random() * 200) + 10).toLocaleString()},${(Math.floor(Math.random() * 899) + 100)}`;
+        
+        labelDiv.innerHTML = `<div class="name">${LABELS[i]}</div><div class="val" id="lbl-${i}">${valStr}</div>`;
+        labelsContainer.appendChild(labelDiv);
+    });
+
+    // Core function to update the paths and nodes
+    function updateRadar() {
+        let ptsPink = [];
+        let ptsBlue = [];
+
+        nodesGrp.innerHTML = ''; // Rebuild nodes for simplicity
+
+        for (let i = 0; i < AXIS_COUNT; i++) {
+            let a = angles[i];
+            
+            // Calc coordinates
+            let pxPink = RADAR_CX + (MAX_RADIUS * (dataPink[i]/100)) * Math.cos(a);
+            let pyPink = RADAR_CY + (MAX_RADIUS * (dataPink[i]/100)) * Math.sin(a);
+            ptsPink.push(`${pxPink},${pyPink}`);
+
+            let pxBlue = RADAR_CX + (MAX_RADIUS * (dataBlue[i]/100)) * Math.cos(a);
+            let pyBlue = RADAR_CY + (MAX_RADIUS * (dataBlue[i]/100)) * Math.sin(a);
+            ptsBlue.push(`${pxBlue},${pyBlue}`);
+
+            // Create Draggable Nodes
+            createNode(pxPink, pyPink, i, 'pink');
+            createNode(pxBlue, pyBlue, i, 'blue');
+        }
+
+        pathPink.setAttribute("d", `M ${ptsPink.join(" L ")} Z`);
+        pathBlue.setAttribute("d", `M ${ptsBlue.join(" L ")} Z`);
+    }
+
+    // Node Creation and Drag Logic (The "Warping" interaction)
+    let activeDrag = null;
+
+    function createNode(x, y, index, type) {
+        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "5");
+        circle.setAttribute("class", `radar-point ${type}`);
+        
+        circle.addEventListener('mousedown', (e) => {
+            activeDrag = { index, type, el: circle };
+            document.body.style.cursor = 'grabbing';
+        });
+
+        nodesGrp.appendChild(circle);
+    }
+
+    // Handle SVG Dragging
+    svg.addEventListener('mousemove', (e) => {
+        if(!activeDrag) return;
+        
+        // Get mouse coordinates relative to SVG
+        let pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        let svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        // Calculate distance from center
+        let dx = svgP.x - RADAR_CX;
+        let dy = svgP.y - RADAR_CY;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        
+        // Constrain and map to 0-100
+        let val = (dist / MAX_RADIUS) * 100;
+        val = Math.max(0, Math.min(100, val));
+
+        // Update dataset
+        if(activeDrag.type === 'pink') dataPink[activeDrag.index] = val;
+        else dataBlue[activeDrag.index] = val;
+
+        // Visual warp text
+        let labelVal = document.getElementById(`lbl-${activeDrag.index}`);
+        labelVal.style.transform = `scale(${1 + val/200}) skewX(${val/10}deg)`;
+        labelVal.style.color = activeDrag.type === 'pink' ? 'var(--accent-pink)' : 'var(--accent-blue)';
+        
+        // Throttle text reset
+        clearTimeout(labelVal.warpTimeout);
+        labelVal.warpTimeout = setTimeout(() => {
+            labelVal.style.transform = 'none';
+            labelVal.style.color = 'var(--text-dark)';
+        }, 300);
+
+        // Quick draw without transition for real-time dragging
+        pathPink.style.transition = 'none';
+        pathBlue.style.transition = 'none';
+        
+        updateRadar();
+    });
+
+    window.addEventListener('mouseup', () => {
+        if(activeDrag) {
+            activeDrag = null;
+            document.body.style.cursor = 'default';
+            // Restore transitions
+            pathPink.style.transition = '';
+            pathBlue.style.transition = '';
+        }
+    });
+
+    // Time Filter Interaction (Randomizes and Animates Data)
+    function randomizeData(btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Restore transition for smooth warp
+        pathPink.style.transition = 'd 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        pathBlue.style.transition = 'd 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+        for(let i=0; i<AXIS_COUNT; i++) {
+            dataPink[i] = Math.random() * 70 + 30; // 30-100
+            dataBlue[i] = Math.random() * 70 + 20; // 20-90
+            
+            // Randomize labels
+            let lbl = document.getElementById(`lbl-${i}`);
+            lbl.innerHTML = `$${(Math.floor(Math.random() * 200) + 10).toLocaleString()},${(Math.floor(Math.random() * 899) + 100)}`;
+            
+            // Text pop animation
+            lbl.style.transform = 'scale(1.2)';
+            setTimeout(() => { lbl.style.transform = 'none'; }, 300);
+        }
+
+        // Randomize donut chart
+        const dash1 = Math.random() * 150 + 50;
+        const dash2 = Math.random() * 120 + 30;
+        const dash3 = Math.random() * 80 + 20;
+        document.getElementById('dSeg1').setAttribute('stroke-dasharray', `${dash1} 251.2`);
+        document.getElementById('dSeg2').setAttribute('stroke-dasharray', `${dash2} 188.4`);
+        document.getElementById('dSeg3').setAttribute('stroke-dasharray', `${dash3} 125.6`);
+
+        updateRadar();
+    }
+
+    // Init Radar
+    updateRadar();
+
+    /**
+     * 3D HOVER EFFECT FOR DATABASE CARD
+     * Creates a transformative spatial warping effect.
+     */
+    const dbCard = document.getElementById('dbCard');
+    
+    dbCard.addEventListener('mousemove', (e) => {
+        const rect = dbCard.getBoundingClientRect();
+        const x = e.clientX - rect.left; // x position within the element
+        const y = e.clientY - rect.top;  // y position within the element
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Calculate rotation degrees (max 15 deg)
+        const rotateX = ((y - centerY) / centerY) * -10; 
+        const rotateY = ((x - centerX) / centerX) * 10;
+        
+        dbCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    dbCard.addEventListener('mouseleave', () => {
+        // Spring back to original position
+        dbCard.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        dbCard.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+        
+        // Remove transition after it completes to allow smooth mousemove again
+        setTimeout(() => {
+            dbCard.style.transition = 'transform 0.1s';
+        }, 500);
+    });
+
+</script>
+
+</body>
+</html>
