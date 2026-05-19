@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNG Jelly Warp Widget</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #111;
+    overflow: hidden;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.controls, .download {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px;
+    width: 300px;
+}
+
+canvas {
+    display: block;
+    border: 2px dashed #444;
+    max-width: 500px;
+    max-height: 500px;
+}
+
+button {
+    padding: 10px;
+    background: #222;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<h2>PNG Jelly Warp</h2>
+<input type="file" id="upload" accept="image/png">
+
+<div class="controls">
+<label>Speed <span id="speedVal">1</span></label>
+<input type="range" id="speed" min="0.1" max="5" step="0.1" value="1">
+
+<label>Intensity <span id="intensityVal">0.05</span></label>
+<input type="range" id="intensity" min="0.01" max="0.2" step="0.01" value="0.05">
+
+<label>Angle <span id="angleVal">0</span></label>
+<input type="range" id="angle" min="0" max="45" step="1" value="0">
+</div>
+
+<div class="download">
+<label>Download Resolution</label>
+<select id="resolution">
+<option value="1920">1080p</option>
+<option value="2560">2K</option>
+<option value="3840">4K</option>
+</select>
+<button id="downloadBtn">Download 5 Cycles</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const upload = document.getElementById('upload');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const speedSlider = document.getElementById('speed');
+const intensitySlider = document.getElementById('intensity');
+const angleSlider = document.getElementById('angle');
+
+const speedVal = document.getElementById('speedVal');
+const intensityVal = document.getElementById('intensityVal');
+const angleVal = document.getElementById('angleVal');
+
+const downloadBtn = document.getElementById('downloadBtn');
+const resolutionSelect = document.getElementById('resolution');
+
+let img = new Image();
+let time = 0;
+let speed = 1;
+let intensity = 0.05;
+let angle = 0;
+
+speedSlider.oninput = () => { speed = +speedSlider.value; speedVal.textContent = speed; };
+intensitySlider.oninput = () => { intensity = +intensitySlider.value; intensityVal.textContent = intensity; };
+angleSlider.oninput = () => { angle = +angleSlider.value; angleVal.textContent = angle; };
+
+upload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        img.onload = () => {
+            canvas.width = img.width * 1.2;
+            canvas.height = img.height * 1.2;
+            animate();
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+function draw(ctx, w, h, t) {
+    ctx.clearRect(0, 0, w, h);
+
+    const sx = 1 + intensity * Math.sin(t);
+    const sy = 1 - intensity * Math.sin(t);
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((angle * Math.PI/180) * Math.sin(t));
+    ctx.scale(sx, sy);
+
+    const scaleFit = Math.min(w/img.width, h/img.height) * 0.8;
+    ctx.drawImage(img, -img.width*scaleFit/2, -img.height*scaleFit/2, img.width*scaleFit, img.height*scaleFit);
+
+    ctx.restore();
+}
+
+function animate() {
+    draw(ctx, canvas.width, canvas.height, time);
+    time += 0.05 * speed;
+    requestAnimationFrame(animate);
+}
+
+// SINGLE CLEAN DOWNLOAD IMPLEMENTATION (fixed)
+
+downloadBtn.onclick = () => {
+    if (!img.src) {
+        alert('Upload a PNG first');
+        return;
+    }
+
+    const res = +resolutionSelect.value;
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = res;
+    offCanvas.height = res;
+    const offCtx = offCanvas.getContext('2d');
+
+    const stream = offCanvas.captureStream(60);
+
+    if (!window.MediaRecorder) {
+        alert('MediaRecorder not supported. Use Chrome.');
+        return;
+    }
+
+    const recorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'jelly.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+    };
+
+    recorder.start(100);
+
+    let t = 0;
+    const total = 5 * Math.PI * 2;
+    const step = 0.05 * speed;
+
+    const interval = setInterval(() => {
+        draw(offCtx, offCanvas.width, offCanvas.height, t);
+        t += step;
+
+        if (t >= total) {
+            clearInterval(interval);
+            setTimeout(() => recorder.stop(), 200);
+        }
+    }, 16);
+};
+</script>
+
+</body>
+</html>
