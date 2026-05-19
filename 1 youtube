@@ -1,810 +1,194 @@
 <!DOCTYPE html>
-<html lang="en" class="h-screen w-screen overflow-hidden">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notion Monotone Warp Widget</title>
-    
-    <!-- Tailwind CSS for high-fidelity custom design systems -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for robust minimalist iconography -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter & JetBrains Mono for the pristine Notion appearance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        notion: {
-                            lightBg: '#fbfbfa',
-                            lightBorder: '#e3e3e2',
-                            lightText: '#37352f',
-                            darkBg: '#191919',
-                            darkBorder: '#2f2f2f',
-                            darkText: '#ebebeb',
-                            accent: '#2eaadc'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <title>Notion Style Redirect Button</title>
     <style>
-        /* Force structural containment to eliminate viewport collapse */
-        html, body {
-            height: 100vh !important;
-            width: 100vw !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            position: relative;
+        /* =========================================================
+           Notion Style Monotone Theme & Reset
+           ========================================================= */
+        :root {
+            --notion-bg: #ffffff;
+            --notion-text: #2f3437;
+            --notion-text-light: #787c7e;
+            --notion-border: #e1e4e8;
+            --transition-warp: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fbfbfa;
-            color: #37352f;
-            transition: background-color 0.3s ease, color 0.3s ease;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        .dark body {
-            background-color: #191919;
-            color: #ebebeb;
+        body, html {
+            height: 100%;
+            background-color: var(--notion-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--notion-text);
         }
 
-        /* 3D Transform and Card Parallax Perspective */
-        .perspective-container {
-            perspective: 1200px;
-            transform-style: preserve-3d;
-        }
-
-        .tilt-card {
-            transform-style: preserve-3d;
-            transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
-        }
-
-        /* High-fidelity Notion-style layout Grid */
-        .notion-grid {
-            background-size: 24px 24px;
-            background-image: 
-                linear-gradient(to right, rgba(55, 53, 47, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(55, 53, 47, 0.03) 1px, transparent 1px);
-        }
-
-        .dark .notion-grid {
-            background-image: 
-                linear-gradient(to right, rgba(235, 235, 235, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(235, 235, 235, 0.02) 1px, transparent 1px);
-        }
-
-        /* Fluid custom scrollbar configurations */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(150, 150, 150, 0.2);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(150, 150, 150, 0.4);
-        }
-
-        /* Interactive ripple expansion styles */
-        .ripple {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.08);
-            border-radius: 50%;
-            transform: scale(0);
-            animation: ripple-effect 0.8s cubic-bezier(0.1, 0.8, 0.3, 1);
-            pointer-events: none;
-        }
-        .dark .ripple {
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        @keyframes ripple-effect {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        /* Warp distortion liquid filter overlay */
-        .warp-filter {
-            filter: url('#gooey-warp');
-        }
-
-        /* Glossy Reflection overlay styling */
-        .card-shine {
-            position: absolute;
+        /* =========================================================
+           Page Loading Bar (Mimics Chrome loading)
+           ========================================================= */
+        #page-loader {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.15) 0%, transparent 60%);
-            pointer-events: none;
+            height: 3px;
+            background-color: var(--notion-text);
+            width: 0%;
+            z-index: 9999;
+            transition: width 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            opacity: 1;
+        }
+
+        /* =========================================================
+           The Central Button
+           ========================================================= */
+        .notion-btn {
+            position: relative;
+            background-color: var(--notion-bg);
+            color: var(--notion-text);
+            border: 1px solid var(--notion-border);
+            border-radius: 4px; /* Notion's standard slight rounding */
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: var(--transition-warp);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 160px;
+            height: 44px;
+        }
+
+        .btn-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        /* SVG Play Icon */
+        .btn-text svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s;
+        }
+
+        /* =========================================================
+           Hover: Transform & Warp Animation
+           ========================================================= */
+        .notion-btn:hover {
+            /* Transform and Skew for the Warp effect */
+            transform: scale(1.08) perspective(200px) rotateX(4deg) rotateY(-4deg) skew(-2deg, 1deg);
+            /* Morphing the border radius to warp the shape */
+            border-radius: 16px 4px 16px 4px; 
+            border-color: var(--notion-text);
+            box-shadow: -4px 8px 15px rgba(0, 0, 0, 0.1);
+            background-color: #f7f7f5; /* Very subtle Notion hover background */
+        }
+
+        .notion-btn:hover .btn-text svg {
+            transform: scale(1.2);
+        }
+
+        /* Active/Click State */
+        .notion-btn:active {
+            transform: scale(0.96) skew(1deg, -1deg);
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* =========================================================
+           Loading State Styles
+           ========================================================= */
+        .loader-spinner {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--notion-border);
+            border-top-color: var(--notion-text);
+            border-radius: 50%;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            animation: spin 0.8s linear infinite;
+            transition: opacity 0.3s;
         }
-        .dark .card-shine {
-            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, transparent 50%);
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
+
+        .notion-btn.is-loading {
+            pointer-events: none;
+            transform: scale(1); /* Reset warp */
+            border-radius: 22px; /* Morph into pill shape */
+            background-color: var(--notion-bg);
+            border-color: var(--notion-border);
+            box-shadow: none;
+        }
+
+        .notion-btn.is-loading .btn-text {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .notion-btn.is-loading .loader-spinner {
+            opacity: 1;
+        }
+
     </style>
 </head>
+<body>
 
-<body class="select-none notion-grid flex flex-col items-center justify-center transition-all duration-300">
+    <!-- Fake Chrome Page Loader -->
+    <div id="page-loader"></div>
 
-    <!-- Custom SVG gooey distortion filter used for interactive transitions -->
-    <svg class="hidden">
-        <defs>
-            <filter id="gooey-warp">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
-                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
-                <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-            </filter>
-        </defs>
-    </svg>
-
-    <!-- Full-screen Canvas for Background Space-Warp simulation -->
-    <canvas id="warpCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40 dark:opacity-25 transition-opacity duration-500"></canvas>
-
-    <!-- Notion Header Control Bar -->
-    <header class="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-20 border-b border-notion-lightBorder/40 dark:border-notion-darkBorder/40 bg-notion-lightBg/80 dark:bg-notion-darkBg/80 backdrop-blur-md">
-        <div class="flex items-center space-x-3">
-            <span class="text-xs font-mono tracking-wider text-neutral-400 uppercase">Monotone Workspace</span>
-            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 bg-neutral-200/60 dark:bg-neutral-800 rounded text-neutral-600 dark:text-neutral-400">V3.0_RELEASE</span>
-        </div>
-        <div class="flex items-center space-x-2">
-            <!-- Sound Toggle Button -->
-            <button id="soundToggle" class="p-2 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 transition-colors" title="Toggle Sound Feedback">
-                <i id="soundIcon" class="fa-solid fa-volume-high text-xs"></i>
-            </button>
-            <!-- Theme Toggle Button -->
-            <button id="themeToggle" class="p-2 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 transition-colors" title="Toggle Appearance Mode">
-                <i class="fa-regular fa-moon text-sm dark:hidden"></i>
-                <i class="fa-regular fa-sun text-sm hidden dark:block"></i>
-            </button>
-            <!-- Settings Switcher -->
-            <button id="settingsToggle" class="p-2 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 transition-colors" title="Configure Widget parameters">
-                <i class="fa-solid fa-sliders text-sm"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Settings Sidebar Panel (Customization Suite) -->
-    <aside id="settingsPanel" class="fixed right-0 top-0 h-full w-80 bg-notion-lightBg dark:bg-notion-darkBg border-l border-notion-lightBorder dark:border-notion-darkBorder z-40 translate-x-full transition-transform duration-300 ease-in-out shadow-2xl p-6 flex flex-col justify-between">
-        <div>
-            <div class="flex justify-between items-center mb-6 border-b border-notion-lightBorder dark:border-notion-darkBorder pb-4">
-                <h3 class="font-semibold text-xs tracking-wider text-neutral-600 dark:text-neutral-400 uppercase">Interactive Variables</h3>
-                <button id="closeSettings" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-
-            <!-- Parameters Sliders -->
-            <div class="space-y-6">
-                <!-- Particle Count -->
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[11px] font-medium">
-                        <span class="text-neutral-500">Star Density</span>
-                        <span id="particleVal" class="font-mono text-neutral-400">150</span>
-                    </div>
-                    <input type="range" id="particleSlider" min="50" max="400" value="150" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
-                </div>
-
-                <!-- Idle Speed -->
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[11px] font-medium">
-                        <span class="text-neutral-500">Idle Warp Speed</span>
-                        <span id="idleSpeedVal" class="font-mono text-neutral-400">0.4</span>
-                    </div>
-                    <input type="range" id="idleSpeedSlider" min="0.1" max="2.0" step="0.1" value="0.4" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
-                </div>
-
-                <!-- Hover Speed -->
-                <div class="space-y-2">
-                    <div class="flex justify-between text-[11px] font-medium">
-                        <span class="text-neutral-500">Hover Warp Speed</span>
-                        <span id="hoverSpeedVal" class="font-mono text-neutral-400">18</span>
-                    </div>
-                    <input type="range" id="hoverSpeedSlider" min="5" max="40" step="1" value="18" class="w-full accent-neutral-800 dark:accent-neutral-200 bg-neutral-200 dark:bg-neutral-800 h-1 rounded-lg appearance-none cursor-pointer">
-                </div>
-
-                <!-- Custom Warp Pattern Select -->
-                <div class="space-y-2">
-                    <label class="text-[11px] font-medium text-neutral-500">Warp Profile</label>
-                    <select id="patternSelect" class="w-full text-xs p-2 rounded-lg border border-notion-lightBorder dark:border-notion-darkBorder bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-neutral-400">
-                        <option value="classic">Classic Hyper-Jump</option>
-                        <option value="vortex">Vortex Swirl</option>
-                        <option value="radial">Radial Explosion</option>
-                        <option value="helix">Circular Helix</option>
-                    </select>
-                </div>
-
-                <!-- Custom Button Label -->
-                <div class="space-y-2">
-                    <label class="text-[11px] font-medium text-neutral-500">Target Button Text</label>
-                    <input type="text" id="btnLabelInput" value="Initialize Warp" class="w-full text-xs p-2.5 rounded-lg border border-notion-lightBorder dark:border-notion-darkBorder bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:border-neutral-500">
-                </div>
-            </div>
-        </div>
-
-        <div class="border-t border-notion-lightBorder dark:border-notion-darkBorder pt-4">
-            <p class="text-[10px] text-neutral-400 font-mono leading-relaxed">
-                Interact with the central monolith. Hovering triggers acceleration. Clicking simulates a secure transfer protocols directly towards YouTube.
-            </p>
-        </div>
-    </aside>
-
-    <!-- Center Button Widget Master Container -->
-    <main class="relative z-10 w-full max-w-lg px-6 flex flex-col items-center justify-center">
-        <!-- Parallax/Tilt 3D Space Wrapper -->
-        <div id="tiltWrapper" class="perspective-container w-full flex flex-col items-center justify-center py-10">
-            
-            <!-- Beautiful High-Contrast Central Monolith Box -->
-            <div id="widgetCard" class="tilt-card w-full max-w-sm p-10 bg-notion-lightBg dark:bg-notion-darkBg border border-notion-lightBorder dark:border-notion-darkBorder rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center text-center relative group overflow-hidden">
-                
-                <!-- Gloss Reflection Overlay layer -->
-                <div id="cardShine" class="card-shine"></div>
-
-                <!-- Decorative Minimalist Monotone corner lines -->
-                <div class="absolute top-4 left-4 w-3 h-3 border-t border-l border-neutral-300 dark:border-neutral-700 pointer-events-none"></div>
-                <div class="absolute top-4 right-4 w-3 h-3 border-t border-r border-neutral-300 dark:border-neutral-700 pointer-events-none"></div>
-                <div class="absolute bottom-4 left-4 w-3 h-3 border-b border-l border-neutral-300 dark:border-neutral-700 pointer-events-none"></div>
-                <div class="absolute bottom-4 right-4 w-3 h-3 border-b border-r border-neutral-300 dark:border-neutral-700 pointer-events-none"></div>
-
-                <!-- Visual Cue Icon -->
-                <div class="mb-6 w-12 h-12 rounded-full border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-center text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-800 dark:group-hover:text-neutral-200 group-hover:border-neutral-400/80 dark:group-hover:border-neutral-600 transition-all duration-300">
-                    <i id="monolithIcon" class="fa-solid fa-expand text-base transition-transform duration-500"></i>
-                </div>
-
-                <h1 class="text-xs font-semibold tracking-widest text-neutral-700 dark:text-neutral-300 uppercase mb-2">Monolithic Core</h1>
-                <p class="text-xs text-neutral-400 dark:text-neutral-500 mb-8 max-w-[240px] leading-relaxed">Hover to charge engines.<br>Click to transition outer systems.</p>
-
-                <!-- The Core Target Action Button -->
-                <button id="warpButton" class="relative group/btn w-60 h-14 overflow-hidden rounded-xl border border-neutral-800 dark:border-neutral-200 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 font-medium tracking-wide text-xs uppercase shadow-[0_4px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_25px_rgba(255,255,255,0.08)] transform transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_8px_30px_rgba(255,255,255,0.15)] focus:outline-none focus:ring-1 focus:ring-neutral-400 active:scale-95">
-                    
-                    <!-- Monotone Inner liquid visual transition morph -->
-                    <div class="absolute inset-0 bg-neutral-100 dark:bg-neutral-900 transition-transform duration-500 scale-y-0 origin-bottom group-hover/btn:scale-y-100"></div>
-                    
-                    <!-- Content template layers with sliding animations -->
-                    <span id="btnTextContainer" class="relative z-10 flex items-center justify-center space-x-2 transition-colors duration-300 group-hover/btn:text-neutral-900 dark:group-hover/btn:text-neutral-100">
-                        <span id="btnLabel">Initialize Warp</span>
-                        <i id="btnIcon" class="fa-solid fa-arrow-right-long text-[10px] transform group-hover/btn:translate-x-2 transition-transform duration-300"></i>
-                    </span>
-
-                    <!-- Decorative Border bottom glow -->
-                    <div class="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-neutral-500 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                </button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Minimalist Custom Chrome-Style Transition Screen overlay -->
-    <div id="loaderOverlay" class="fixed inset-0 bg-notion-lightBg dark:bg-notion-darkBg z-50 flex flex-col items-center justify-center pointer-events-none opacity-0 scale-105 transition-all duration-700 ease-out">
-        <div class="w-full max-w-xl px-6 flex flex-col items-center">
-            
-            <!-- Mock Chrome Browser Window Header bar -->
-            <div class="w-full bg-neutral-100 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 rounded-t-xl p-3.5 flex items-center space-x-2 shadow-sm">
-                <!-- Mac style browser control buttons -->
-                <div class="flex space-x-1.5 flex-shrink-0">
-                    <span class="w-3 h-3 rounded-full bg-red-400/80 block"></span>
-                    <span class="w-3 h-3 rounded-full bg-yellow-400/80 block"></span>
-                    <span class="w-3 h-3 rounded-full bg-green-400/80 block"></span>
-                </div>
-                <!-- URL Address Space -->
-                <div class="flex-1 max-w-md mx-auto bg-white dark:bg-black/40 border border-neutral-200/60 dark:border-neutral-800 rounded-lg py-1 px-4 text-[10px] text-center text-neutral-400 dark:text-neutral-500 flex items-center justify-center space-x-2 font-mono truncate shadow-inner">
-                    <i class="fa-solid fa-lock text-[8px] text-green-500"></i>
-                    <span id="tabUrlText">fetching://chrome_system_page</span>
-                </div>
-            </div>
-
-            <!-- Mock Page loading space body -->
-            <div class="w-full bg-white dark:bg-neutral-950 border-x border-b border-neutral-200 dark:border-neutral-800 rounded-b-xl p-12 flex flex-col items-center justify-center space-y-8 relative overflow-hidden shadow-2xl">
-                
-                <!-- Orbiting loader visual ring -->
-                <div class="relative w-20 h-20">
-                    <div class="absolute inset-0 rounded-full border-4 border-neutral-100 dark:border-neutral-900"></div>
-                    <div class="absolute inset-0 rounded-full border-t-4 border-neutral-800 dark:border-white animate-spin"></div>
-                    <div class="absolute inset-4 rounded-full border-2 border-dashed border-neutral-200 dark:border-neutral-800 animate-pulse"></div>
-                </div>
-
-                <!-- Live Dynamic terminal diagnostics log -->
-                <div class="w-full max-w-sm text-center">
-                    <h2 class="text-sm font-semibold tracking-wider text-neutral-700 dark:text-neutral-300 uppercase mb-2">Redirecting to YouTube</h2>
-                    <p id="loaderStatus" class="text-[11px] text-neutral-400 font-mono tracking-tight bg-neutral-50 dark:bg-neutral-900/60 py-2 px-3 rounded-lg border border-neutral-150 dark:border-neutral-800/80 min-h-[36px] flex items-center justify-center">Extracting host metadata...</p>
-                </div>
-
-                <!-- Elegant Linear progress completion meter -->
-                <div class="w-full max-w-xs bg-neutral-100 dark:bg-neutral-900 h-1.5 rounded-full overflow-hidden shadow-inner">
-                    <div id="progressBar" class="w-0 bg-neutral-800 dark:bg-neutral-100 h-full transition-all duration-300 ease-out"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer subtle credits layout -->
-    <footer class="absolute bottom-5 left-0 w-full text-center z-20">
-        <p class="text-[9px] text-neutral-400/80 font-mono tracking-widest uppercase">Monolithic Core System Interface</p>
-    </footer>
+    <!-- Centered Widget Button -->
+    <button class="notion-btn" id="redirect-btn">
+        <span class="btn-text">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+            </svg>
+            YouTube
+        </span>
+        <span class="loader-spinner"></span>
+    </button>
 
     <script>
-        // Guardrail helper for sandboxed environments like iframe previews
-        function getSafeStorage(key, defaultVal) {
-            try {
-                const item = localStorage.getItem(key);
-                return item !== null ? item : defaultVal;
-            } catch (e) {
-                return defaultVal;
-            }
-        }
+        const btn = document.getElementById('redirect-btn');
+        const pageLoader = document.getElementById('page-loader');
 
-        function setSafeStorage(key, val) {
-            try {
-                localStorage.setItem(key, val);
-            } catch (e) {}
-        }
+        btn.addEventListener('click', () => {
+            // 1. Trigger the button's internal loading morph animation
+            btn.classList.add('is-loading');
 
-        const themeToggle = document.getElementById('themeToggle');
-        const soundToggle = document.getElementById('soundToggle');
-        const soundIcon = document.getElementById('soundIcon');
-        const settingsToggle = document.getElementById('settingsToggle');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const closeSettings = document.getElementById('closeSettings');
-        const widgetCard = document.getElementById('widgetCard');
-        const tiltWrapper = document.getElementById('tiltWrapper');
-        const cardShine = document.getElementById('cardShine');
-        const warpButton = document.getElementById('warpButton');
-        const btnLabel = document.getElementById('btnLabel');
-        const btnLabelInput = document.getElementById('btnLabelInput');
-        const particleSlider = document.getElementById('particleSlider');
-        const particleVal = document.getElementById('particleVal');
-        const idleSpeedSlider = document.getElementById('idleSpeedSlider');
-        const idleSpeedVal = document.getElementById('idleSpeedVal');
-        const hoverSpeedSlider = document.getElementById('hoverSpeedSlider');
-        const hoverSpeedVal = document.getElementById('hoverSpeedVal');
-        const patternSelect = document.getElementById('patternSelect');
-        const loaderOverlay = document.getElementById('loaderOverlay');
-        const loaderStatus = document.getElementById('loaderStatus');
-        const progressBar = document.getElementById('progressBar');
-        const tabUrlText = document.getElementById('tabUrlText');
-        const warpCanvas = document.getElementById('warpCanvas');
-        const monolithIcon = document.getElementById('monolithIcon');
-        const ctx = warpCanvas.getContext('2d');
+            // 2. Trigger the top page progress bar (Chrome style)
+            pageLoader.style.width = '75%';
 
-        let state = {
-            theme: getSafeStorage('theme', 'light'),
-            soundEnabled: getSafeStorage('soundEnabled', 'true') === 'true',
-            particleCount: parseInt(particleSlider.value),
-            idleWarpSpeed: parseFloat(idleSpeedSlider.value),
-            hoverWarpSpeed: parseFloat(hoverSpeedSlider.value),
-            isHovered: false,
-            currentSpeed: parseFloat(idleSpeedSlider.value),
-            buttonLabel: btnLabelInput.value,
-            warpPattern: patternSelect.value,
-            isRedirecting: false
-        };
-
-        let particles = [];
-        let cx = window.innerWidth / 2;
-        let cy = window.innerHeight / 2;
-
-        function resizeCanvas() {
-            warpCanvas.width = window.innerWidth;
-            warpCanvas.height = window.innerHeight;
-            cx = warpCanvas.width / 2;
-            cy = warpCanvas.height / 2;
-        }
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            initParticles();
-        });
-        resizeCanvas();
-
-        // Premium Monotonic Synth sound triggers
-        function playSynthPitch(frequency, duration, type = 'sine', fadeOut = true) {
-            if (!state.soundEnabled) return;
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                if (fadeOut) {
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                }
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (err) {
-                console.log("Audio Engine context bypassed in iframe scenario.");
-            }
-        }
-
-        class WarpParticle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                // Positional distribution in perspective space coordinates
-                this.x = (Math.random() - 0.5) * warpCanvas.width * 2;
-                this.y = (Math.random() - 0.5) * warpCanvas.height * 2;
-                this.z = Math.random() * warpCanvas.width;
-                
-                // Track previous coordinates for projection stretch traces
-                this.px = this.x;
-                this.py = this.y;
-                
-                // Custom orbit and spiral attributes
-                this.angle = Math.random() * Math.PI * 2;
-                this.radius = Math.sqrt(this.x * this.x + this.y * this.y);
-                this.angularVelocity = (Math.random() - 0.5) * 0.02;
-            }
-
-            update(speed) {
-                this.px = this.x;
-                this.py = this.y;
-                
-                if (state.warpPattern === 'classic') {
-                    // Pull closer straight along Z vector
-                    this.z -= speed;
-                    if (this.z <= 0) {
-                        this.reset();
-                        this.z = warpCanvas.width;
-                    }
-                } else if (state.warpPattern === 'vortex') {
-                    // Swirl towards viewer along dynamic angle helix path
-                    this.angle += this.angularVelocity * (speed * 0.5 + 0.5);
-                    this.z -= speed;
-                    this.x = Math.cos(this.angle) * this.radius;
-                    this.y = Math.sin(this.angle) * this.radius;
-                    if (this.z <= 0) {
-                        this.reset();
-                        this.z = warpCanvas.width;
-                    }
-                } else if (state.warpPattern === 'radial') {
-                    // Expands directly outwards along radial vector offsets
-                    this.z -= speed * 0.5;
-                    const expansionFactor = 1 + (speed * 0.01);
-                    this.x *= expansionFactor;
-                    this.y *= expansionFactor;
-                    if (Math.abs(this.x) > warpCanvas.width || Math.abs(this.y) > warpCanvas.height) {
-                        this.reset();
-                    }
-                } else if (state.warpPattern === 'helix') {
-                    // Continuous spiral orbits
-                    this.angle += 0.01 * (speed * 0.2 + 0.5);
-                    this.z -= speed;
-                    this.x = Math.cos(this.angle) * (this.radius + (warpCanvas.width - this.z) * 0.2);
-                    this.y = Math.sin(this.angle) * (this.radius + (warpCanvas.width - this.z) * 0.2);
-                    if (this.z <= 0) {
-                        this.reset();
-                        this.z = warpCanvas.width;
-                    }
-                }
-            }
-
-            draw() {
-                // Standard projection variables onto flattened screen coords
-                let sx, sy, psx, psy;
-                
-                if (state.warpPattern === 'radial') {
-                    sx = this.x + cx;
-                    sy = this.y + cy;
-                    psx = this.px + cx;
-                    psy = this.py + cy;
-                } else {
-                    sx = (this.x / this.z) * cx + cx;
-                    sy = (this.y / this.z) * cy + cy;
-                    psx = (this.px / (this.z + state.currentSpeed)) * cx + cx;
-                    psy = (this.py / (this.z + state.currentSpeed)) * cy + cy;
-                }
-
-                // Render condition limits
-                if (sx < 0 || sx > warpCanvas.width || sy < 0 || sy > warpCanvas.height) {
-                    return;
-                }
-
-                // Smoothly fade alpha based on Z proximity
-                const alpha = Math.min(1.0, 1 - this.z / warpCanvas.width);
-                const strokeColor = state.theme === 'dark' 
-                    ? `rgba(235, 235, 235, ${alpha})`
-                    : `rgba(55, 53, 47, ${alpha})`;
-
-                ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = Math.max(0.8, (1 - this.z / warpCanvas.width) * 3);
-                ctx.beginPath();
-                ctx.moveTo(psx, psy);
-                ctx.lineTo(sx, sy);
-                ctx.stroke();
-            }
-        }
-
-        function initParticles() {
-            particles = [];
-            for (let i = 0; i < state.particleCount; i++) {
-                particles.push(new WarpParticle());
-            }
-        }
-        initParticles();
-
-        function drawFrame() {
-            // Semi-transparent overlay to draw fluid tails/smear effect over existing frames
-            ctx.fillStyle = state.theme === 'dark' 
-                ? 'rgba(25, 25, 25, 0.28)' 
-                : 'rgba(251, 251, 250, 0.28)';
-            ctx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
-
-            // Smooth linear speed interpolation towards target thresholds
-            const targetSpeed = state.isHovered ? state.hoverWarpSpeed : state.idleWarpSpeed;
-            state.currentSpeed += (targetSpeed - state.currentSpeed) * 0.1;
-
-            particles.forEach(p => {
-                p.update(state.currentSpeed);
-                p.draw();
-            });
-
-            requestAnimationFrame(drawFrame);
-        }
-        drawFrame();
-
-        function updateTheme() {
-            if (state.theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            setSafeStorage('theme', state.theme);
-        }
-        updateTheme();
-
-        function updateSoundIcon() {
-            if (state.soundEnabled) {
-                soundIcon.className = "fa-solid fa-volume-high text-xs";
-                soundToggle.classList.remove('opacity-50');
-            } else {
-                soundIcon.className = "fa-solid fa-volume-xmark text-xs";
-                soundToggle.classList.add('opacity-50');
-            }
-        }
-        updateSoundIcon();
-
-        themeToggle.addEventListener('click', () => {
-            state.theme = state.theme === 'light' ? 'dark' : 'light';
-            updateTheme();
-            playSynthPitch(440, 0.15, 'triangle');
-        });
-
-        soundToggle.addEventListener('click', () => {
-            state.soundEnabled = !state.soundEnabled;
-            setSafeStorage('soundEnabled', state.soundEnabled.toString());
-            updateSoundIcon();
-            if (state.soundEnabled) {
-                playSynthPitch(600, 0.1, 'sine');
-            }
-        });
-
-        settingsToggle.addEventListener('click', () => {
-            settingsPanel.classList.remove('translate-x-full');
-            playSynthPitch(520, 0.1, 'sine');
-        });
-
-        closeSettings.addEventListener('click', () => {
-            settingsPanel.classList.add('translate-x-full');
-            playSynthPitch(380, 0.1, 'sine');
-        });
-
-        // Config Sliders Input Actions
-        particleSlider.addEventListener('input', (e) => {
-            const count = parseInt(e.target.value);
-            particleVal.textContent = count;
-            state.particleCount = count;
-            initParticles();
-        });
-
-        idleSpeedSlider.addEventListener('input', (e) => {
-            const speed = parseFloat(e.target.value);
-            idleSpeedVal.textContent = speed;
-            state.idleWarpSpeed = speed;
-        });
-
-        hoverSpeedSlider.addEventListener('input', (e) => {
-            const speed = parseFloat(e.target.value);
-            hoverSpeedVal.textContent = speed;
-            state.hoverWarpSpeed = speed;
-        });
-
-        patternSelect.addEventListener('change', (e) => {
-            state.warpPattern = e.target.value;
-            initParticles();
-            playSynthPitch(580, 0.12, 'sawtooth');
-        });
-
-        btnLabelInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            state.buttonLabel = val;
-            btnLabel.textContent = val;
-        });
-
-        const handleTilt = (e) => {
-            const rect = widgetCard.getBoundingClientRect();
-            // Compute coordinate cursor offsets normalized from card center
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-
-            // Rotation angle variables
-            const degX = -(y / (rect.height / 2)) * 14; 
-            const degY = (x / (rect.width / 2)) * 14;
-
-            widgetCard.style.transform = `rotateX(${degX}deg) rotateY(${degY}deg) translateY(-6px)`;
-            
-            // Render beautiful shifting specular highlight based on cursor angle
-            cardShine.style.opacity = '1';
-            cardShine.style.background = `radial-gradient(circle at ${(e.clientX - rect.left) / rect.width * 100}% ${(e.clientY - rect.top) / rect.height * 100}%, rgba(255,255,255,0.18) 0%, transparent 60%)`;
-        };
-
-        const resetTilt = () => {
-            widgetCard.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
-            cardShine.style.opacity = '0';
-        };
-
-        tiltWrapper.addEventListener('mousemove', handleTilt);
-        tiltWrapper.addEventListener('mouseleave', resetTilt);
-
-        warpButton.addEventListener('mouseenter', () => {
-            state.isHovered = true;
-            warpButton.style.transform = 'scale(1.04)';
-            monolithIcon.classList.add('rotate-45');
-            playSynthPitch(280, 0.2, 'sine', true);
-            playSynthPitch(380, 0.25, 'triangle', true);
-        });
-
-        warpButton.addEventListener('mouseleave', () => {
-            state.isHovered = false;
-            warpButton.style.transform = 'scale(1)';
-            monolithIcon.classList.remove('rotate-45');
-        });
-
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        tiltWrapper.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            state.isHovered = true;
-            playSynthPitch(300, 0.15, 'sine');
-        }, { passive: true });
-
-        tiltWrapper.addEventListener('touchend', () => {
-            state.isHovered = false;
-            resetTilt();
-        }, { passive: true });
-
-        tiltWrapper.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                const touch = e.touches[0];
-                const dx = touch.clientX - touchStartX;
-                const dy = touch.clientY - touchStartY;
-                
-                const degX = Math.max(-12, Math.min(12, -(dy / 6)));
-                const degY = Math.max(-12, Math.min(12, (dx / 6)));
-                
-                widgetCard.style.transform = `rotateX(${degX}deg) rotateY(${degY}deg) translateY(-3px)`;
-            }
-        }, { passive: true });
-
-        warpButton.addEventListener('click', (e) => {
-            if (state.isRedirecting) return;
-            state.isRedirecting = true;
-
-            // Synthesis click swoosh sweep sound trigger
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 1.5);
-                
-                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + 1.5);
-            } catch (err) {}
-
-            // Dynamic Touch Ripple element instantiation
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple');
-            
-            const rect = warpButton.getBoundingClientRect();
-            const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-            const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-            
-            ripple.style.left = `${x}px`;
-            ripple.style.top = `${y}px`;
-            
-            warpButton.appendChild(ripple);
-            setTimeout(() => { ripple.remove(); }, 800);
-
-            // Fetch safety parameters of page URL context inside iframe boundaries
-            let currentUrl = "https://notion.so/workspace/widget_monolith";
-            try {
-                if (window.parent && window.parent.location !== window.location) {
-                    currentUrl = window.parent.location.href;
-                } else {
-                    currentUrl = window.location.href;
-                }
-            } catch (err) {
-                currentUrl = window.location.host 
-                    ? `${window.location.protocol}//${window.location.host}${window.location.pathname}`
-                    : "https://notion.so/workspace/core_widget_space";
-            }
-            tabUrlText.textContent = currentUrl;
-
-            // Trigger canvas acceleration
-            state.hoverWarpSpeed = 48;
-            state.isHovered = true;
-
-            // Render Google Chrome Mock overlay layer
+            // 3. Simulate network latency/loading time, then execute redirect
             setTimeout(() => {
-                loaderOverlay.classList.remove('pointer-events-none');
-                loaderOverlay.classList.remove('scale-105', 'opacity-0');
-                loaderOverlay.classList.add('opacity-100', 'scale-100');
+                // Finish the progress bar
+                pageLoader.style.width = '100%';
                 
-                runLoaderPipeline();
-            }, 500);
-        });
-
-        const pipeEvents = [
-            { txt: "Interpreting current DOM layout structure...", duration: 0, scale: 18, pitch: 480 },
-            { txt: "Serializing active host workspace properties...", duration: 700, scale: 35, pitch: 580 },
-            { txt: "Validating YouTube connection handshake...", duration: 1500, scale: 62, pitch: 680 },
-            { txt: "Resolving secure domain handshake tunnels...", duration: 2300, scale: 88, pitch: 780 },
-            { txt: "Redirecting page location to youtube.com...", duration: 3000, scale: 100, pitch: 900 }
-        ];
-
-        function runLoaderPipeline() {
-            pipeEvents.forEach(step => {
+                // Slight delay to allow the user to see the bar complete before redirect
                 setTimeout(() => {
-                    loaderStatus.textContent = step.txt;
-                    progressBar.style.width = `${step.scale}%`;
-                    playSynthPitch(step.pitch, 0.15, 'triangle');
-                    
-                    if (step.scale === 100) {
-                        setTimeout(() => {
-                            window.location.href = "https://www.youtube.com";
-                        }, 500);
-                    }
-                }, step.duration);
-            });
-        }
+                    // Redirect to YouTube on the same tab
+                    window.location.href = 'https://www.youtube.com';
+                }, 300);
+                
+            }, 1200); // 1.2 seconds simulated load time
+        });
     </script>
 </body>
 </html>
