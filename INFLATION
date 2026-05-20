@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Widescreen Economic Inflation Dashboard</title>
+    <title>Macroeconomic Inflation Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
             --text-light: #FFFFFF;
             --text-muted: #A1A1AA;
             
-            /* Economic State Colors */
             --hyperinflation: #FF2E93;
             --galloping: #FF79DA;
             --creeping: #D4FF00;
@@ -33,36 +32,35 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
+        /* Removed flex-centering on body to prevent iframe collapse */
         body {
-            background-color: var(--bg-dark);
+            background-color: #111113;
             color: var(--text-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-            min-height: 100vh;
+            padding: 20px;
+            display: block; 
         }
 
-        /* Expanded Horizontal Container */
+        /* Fixed, rigid width and automatic block display for Notion stability */
         .widget-container {
             width: 100%;
-            max-width: 960px;
+            max-width: 900px;
+            margin: 0 auto;
             background: var(--bg-dark);
-            border-radius: 28px;
-            padding: 32px;
+            border-radius: 24px;
+            padding: 24px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
             border: 2px solid #27272A;
         }
 
         .header {
             text-align: left;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             border-bottom: 1px solid #27272A;
-            padding-bottom: 20px;
+            padding-bottom: 16px;
         }
 
         .header h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
             letter-spacing: -0.5px;
             margin-bottom: 6px;
@@ -74,15 +72,14 @@
 
         .header p {
             color: var(--text-muted);
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.5;
         }
 
-        /* Two Column Layout split for Landscape View */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 24px;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
         }
 
         @media (max-width: 768px) {
@@ -91,24 +88,18 @@
             }
         }
 
-        /* Left Side: Massive Interactive Cookie Display */
         .card-perspective {
             perspective: 1200px;
-            height: 100%;
         }
 
         .interactive-card {
             background: var(--card-dark);
-            border-radius: 24px;
-            padding: 28px;
+            border-radius: 20px;
+            padding: 24px;
             border: 1px solid #27272A;
             transform-style: preserve-3d;
             transition: transform 0.1s ease, box-shadow 0.2s ease;
             will-change: transform;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
 
         .card-title {
@@ -120,24 +111,22 @@
             display: inline-block;
             padding: 6px 12px;
             border-radius: 8px;
-            width: max-content;
         }
 
         .title-purple { background: rgba(158, 119, 246, 0.15); color: var(--purple); }
         .title-pink { background: rgba(255, 121, 218, 0.15); color: var(--pink); }
 
-        /* Giant Cookie Showcase Window */
+        /* Massive, uncollapsible box window */
         .giant-cookie-showcase {
             background: #09090B;
-            border-radius: 20px;
-            padding: 40px 20px;
+            border-radius: 16px;
+            padding: 60px 20px; 
             display: flex;
             justify-content: space-around;
             align-items: center;
-            flex-grow: 1;
             gap: 20px;
             border: 1px solid #1E1E21;
-            min-height: 320px;
+            min-height: 280px; 
         }
 
         .cookie-vault-box {
@@ -150,77 +139,70 @@
         }
 
         .cookie-vault-box span {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 16px;
+            margin-top: 24px;
+            line-height: 1.4;
         }
 
-        /* Dramatically enhanced cookie scaling wrapper */
+        /* Massive base size scaling asset */
         .giant-cookie-graphic {
-            font-size: 72px; /* Huge baseline size */
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 80px; 
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: inline-block;
-            user-select: none;
         }
 
-        /* Right Side Panels */
         .right-column {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
         }
 
         .control-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
         }
 
         .control-label {
             display: flex;
             justify-content: space-between;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .control-label .val {
-            font-weight: 800;
+            margin-bottom: 8px;
         }
 
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: #27272A;
-            height: 10px;
-            border-radius: 6px;
+            height: 8px;
+            border-radius: 4px;
             outline: none;
         }
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background: var(--lime);
             cursor: pointer;
-            transition: transform 0.1s ease;
             border: 2px solid var(--bg-dark);
         }
 
-        input[type=range]::-webkit-slider-thumb:hover {
-            transform: scale(1.25);
-        }
-
-        /* Live Math Matrix Display */
         .formula-display {
             background: #09090B;
-            border-radius: 14px;
-            padding: 18px;
+            border-radius: 12px;
+            padding: 16px;
             font-family: monospace;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px dashed #3F3F46;
         }
 
@@ -241,13 +223,13 @@
 
         .numerator {
             border-bottom: 2px solid var(--text-light);
-            padding-bottom: 4px;
+            padding-bottom: 2px;
             width: 100%;
             text-align: center;
         }
 
         .denominator {
-            padding-top: 4px;
+            padding-top: 2px;
             width: 100%;
             text-align: center;
         }
@@ -255,46 +237,10 @@
         .highlight-new { color: var(--pink); font-weight: bold; }
         .highlight-old { color: var(--purple); font-weight: bold; }
 
-        /* Economic State Indicator Module */
-        .economic-state-banner {
-            border-radius: 18px;
-            padding: 20px;
-            color: var(--bg-dark);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-style: preserve-3d;
-        }
-
-        .state-tag {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(0,0,0,0.15);
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-bottom: 6px;
-        }
-
-        .state-title {
-            font-size: 22px;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 6px;
-        }
-
-        .state-description {
-            font-size: 13px;
-            font-weight: 500;
-            opacity: 0.9;
-            line-height: 1.4;
-        }
-
-        /* Master Global Metric Output */
         .global-result-box {
             background: #27272A;
-            border-radius: 16px;
-            padding: 16px 24px;
+            border-radius: 14px;
+            padding: 14px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -302,16 +248,48 @@
         }
 
         .global-result-box h2 {
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-muted);
         }
 
         .global-result-value {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 800;
             color: var(--lime);
+        }
+
+        .economic-state-banner {
+            border-radius: 16px;
+            padding: 18px;
+            color: var(--bg-dark);
+            transition: all 0.3s ease;
+        }
+
+        .state-tag {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.12);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .state-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .state-description {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.9;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -320,25 +298,23 @@
     <div class="widget-container">
         <div class="header">
             <h1>Macroeconomic <span>Inflation</span> Dashboard</h1>
-            <p>Adjust market variables to transform the physical commodity asset scale and determine real-world structural states of the economy.</p>
+            <p>Adjust market variables to scale asset structures and determine systemic conditions.</p>
         </div>
 
         <div class="dashboard-grid">
             
             <div class="card-perspective">
                 <div class="interactive-card" id="cookieCard">
-                    <div>
-                        <span class="card-title title-purple">Visual Asset Multiplier Window</span>
-                    </div>
+                    <span class="card-title title-purple">Visual Asset Multiplier</span>
                     
                     <div class="giant-cookie-showcase">
                         <div class="cookie-vault-box">
                             <div class="giant-cookie-graphic" id="cookieOld">🍪</div>
-                            <span>Past Basket Base<br>($<span id="labelOldSub">100</span>)</span>
+                            <span>Past Base Basket<br>($<span id="labelOldSub">100</span>)</span>
                         </div>
                         <div class="cookie-vault-box">
                             <div class="giant-cookie-graphic" id="cookieNew">🍪</div>
-                            <span>Present Basket Scale<br>($<span id="labelNewSub">100</span>)</span>
+                            <span>Present Scale Basket<br>($<span id="labelNewSub">105</span>)</span>
                         </div>
                     </div>
                 </div>
@@ -348,7 +324,7 @@
                 
                 <div class="card-perspective">
                     <div class="interactive-card" id="controlCard">
-                        <span class="card-title title-pink">Market Index Inputs</span>
+                        <span class="card-title title-pink">Market Metrics</span>
                         
                         <div class="control-group">
                             <div class="control-label">
@@ -360,7 +336,7 @@
 
                         <div class="control-group">
                             <div class="control-label">
-                                <span>CPI Current Terminal (New Cost)</span>
+                                <span>CPI Terminal Index (New Cost)</span>
                                 <span class="val" style="color: var(--pink);">$<span id="lblNew">105</span></span>
                             </div>
                             <input type="range" id="cpiNew" min="20" max="300" value="105">
@@ -391,7 +367,6 @@
                 </div>
 
             </div>
-
         </div>
     </div>
 
@@ -427,64 +402,52 @@
             fOld2.innerText = oldVal;
             fNew.innerText = newVal;
 
-            // Mathematical Engine Calculation
             const inflationRate = ((newVal - oldVal) / oldVal) * 100;
             rateResult.innerText = inflationRate.toFixed(1);
 
-            /* CRITICAL CHANGE: SIGNIFICANT SCALING CALCULATOR
-               Drastically scales visual size representations based on raw numeric ratios 
-            */
-            const baseScaleOld = (oldVal / 100);
-            const baseScaleNew = (newVal / 100);
+            // Massive Visual Asset Multiplier Math
+            const ratioOld = (oldVal / 100);
+            const ratioNew = (newVal / 100);
             
-            cookieOld.style.transform = `scale(${Math.max(0.3, Math.min(baseScaleOld * 1.4, 2.5))})`;
-            cookieNew.style.transform = `scale(${Math.max(0.3, Math.min(baseScaleNew * 1.4, 2.5))})`;
+            cookieOld.style.transform = `scale(${Math.max(0.4, Math.min(ratioOld * 1.5, 2.6))})`;
+            cookieNew.style.transform = `scale(${Math.max(0.4, Math.min(ratioNew * 1.5, 2.6))})`;
 
-            /* INTEGRATION OF 6 DISTINCT STATES OF REAL-WORLD ECONOMY 
-            */
+            // 6 Distinct Structural Economy States Matrix
             let stateName = "";
             let stateInfo = "";
             let stateColor = "";
 
             if (inflationRate >= 50) {
-                // State 1: Hyperinflation
                 stateName = "🚨 Hyperinflation";
-                stateInfo = "Currency is devaluing destructively. Cash balances rapidly become worthless as price vectors scale exponentially out of institutional control.";
+                stateInfo = "Currency is devaluing destructively. Cash balances rapidly become worthless as price vectors scale exponentially out of control.";
                 stateColor = "var(--hyperinflation)";
             } else if (inflationRate >= 10 && inflationRate < 50) {
-                // State 2: Galloping Inflation
                 stateName = "🏃💨 Galloping Inflation";
                 stateInfo = "High, aggressive structural price climbs. Capital flight begins, and central banks are forced into rapid, emergency interest rate hikes.";
                 stateColor = "var(--pink)";
             } else if (inflationRate > 0 && inflationRate < 10) {
-                // State 3: Creeping Inflation
                 stateName = "🌱 Creeping Inflation";
                 stateInfo = "Mild, predictable expansion. Optimal systemic condition indicating healthy product demand and sustained labor productivity gains.";
-                stateColor = "var(--lime)";
+                stateColor = "var(--creeping)";
             } else if (inflationRate === 0) {
-                // State 4: Absolute Price Stability
                 stateName = "⚖️ Price Stability";
                 stateInfo = "Perfect structural equilibrium. Net zero shifting in average market indexes. Capital velocities remain constant.";
                 stateColor = "var(--stability)";
             } else if (inflationRate < 0 && inflationRate >= -10) {
-                // State 5: Systemic Deflation
                 stateName = "❄️ Deflationary Realignment";
                 stateInfo = "Falling aggregate consumer price metrics. Encourages hoarding of cash reserves, dampening systemic investments and delaying commercial spend.";
                 stateColor = "var(--deflation)";
             } else if (inflationRate < -10) {
-                // State 6: Debt-Deflationary Spiral
                 stateName = "💥 Debt-Deflation Spiral";
                 stateInfo = "Severe systemic contraction. Collapsing product margins drive structural bankruptcies and mass insolvency as real debt burdens surge violently upward.";
                 stateColor = "var(--spiral)";
             }
 
-            // Apply calculated state transformations to UI modules
             stateTitle.innerText = stateName;
             stateDesc.innerText = stateInfo;
             stateBanner.style.backgroundColor = stateColor;
         }
 
-        // Apply Premium 3D Perspective Transform
         function applyWarpEffect(cardId) {
             const card = document.getElementById(cardId);
             card.parentElement.addEventListener('mousemove', (e) => {
@@ -510,7 +473,6 @@
         applyWarpEffect('cookieCard');
         applyWarpEffect('controlCard');
         
-        // Render Initial Matrix State
         updateCalculations();
     </script>
 </body>
