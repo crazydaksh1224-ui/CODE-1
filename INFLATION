@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Inflation Widget</title>
+    <title>Widescreen Economic Inflation Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -16,6 +16,14 @@
             --pink: #FF79DA;
             --text-light: #FFFFFF;
             --text-muted: #A1A1AA;
+            
+            /* Economic State Colors */
+            --hyperinflation: #FF2E93;
+            --galloping: #FF79DA;
+            --creeping: #D4FF00;
+            --stability: #FFFFFF;
+            --deflation: #9E77F6;
+            --spiral: #20E9FF;
         }
 
         * {
@@ -26,36 +34,38 @@
         }
 
         body {
-            background-color: transparent;
+            background-color: var(--bg-dark);
             color: var(--text-light);
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 40px 20px;
             min-height: 100vh;
-            padding: 20px;
-            overflow-x: hidden;
         }
 
+        /* Expanded Horizontal Container */
         .widget-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 960px;
             background: var(--bg-dark);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
             border: 2px solid #27272A;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 24px;
+            text-align: left;
+            margin-bottom: 28px;
+            border-bottom: 1px solid #27272A;
+            padding-bottom: 20px;
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 800;
             letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .header h1 span {
@@ -64,47 +74,108 @@
 
         .header p {
             color: var(--text-muted);
-            font-size: 13px;
+            font-size: 14px;
             line-height: 1.5;
         }
 
-        /* 3D Transform/Warp Card Container */
+        /* Two Column Layout split for Landscape View */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Side: Massive Interactive Cookie Display */
         .card-perspective {
-            perspective: 1000px;
-            margin-bottom: 20px;
+            perspective: 1200px;
+            height: 100%;
         }
 
         .interactive-card {
             background: var(--card-dark);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 24px;
+            padding: 28px;
             border: 1px solid #27272A;
             transform-style: preserve-3d;
             transition: transform 0.1s ease, box-shadow 0.2s ease;
             will-change: transform;
-        }
-
-        .interactive-card:hover {
-            box-shadow: 0 15px 30px rgba(158, 119, 246, 0.15);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .card-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
+            letter-spacing: 1.2px;
+            margin-bottom: 20px;
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            width: max-content;
         }
 
         .title-purple { background: rgba(158, 119, 246, 0.15); color: var(--purple); }
         .title-pink { background: rgba(255, 121, 218, 0.15); color: var(--pink); }
 
-        /* Control & Sliders */
+        /* Giant Cookie Showcase Window */
+        .giant-cookie-showcase {
+            background: #09090B;
+            border-radius: 20px;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-grow: 1;
+            gap: 20px;
+            border: 1px solid #1E1E21;
+            min-height: 320px;
+        }
+
+        .cookie-vault-box {
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cookie-vault-box span {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 16px;
+        }
+
+        /* Dramatically enhanced cookie scaling wrapper */
+        .giant-cookie-graphic {
+            font-size: 72px; /* Huge baseline size */
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+            user-select: none;
+        }
+
+        /* Right Side Panels */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
         .control-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .control-label {
@@ -112,56 +183,52 @@
             justify-content: space-between;
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .control-label .val {
             font-weight: 800;
-            color: var(--lime);
         }
 
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: #27272A;
-            height: 8px;
-            border-radius: 4px;
+            height: 10px;
+            border-radius: 6px;
             outline: none;
         }
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: var(--lime);
             cursor: pointer;
             transition: transform 0.1s ease;
+            border: 2px solid var(--bg-dark);
         }
 
         input[type=range]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
+            transform: scale(1.25);
         }
 
-        /* Formula Card Styling */
+        /* Live Math Matrix Display */
         .formula-display {
             background: #09090B;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 14px;
+            padding: 18px;
             font-family: monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 14px;
             border: 1px dashed #3F3F46;
-            margin-bottom: 16px;
-            overflow-x: auto;
         }
 
         .formula-line {
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
-            gap: 4px;
+            gap: 6px;
         }
 
         .fraction {
@@ -169,18 +236,18 @@
             flex-direction: column;
             align-items: center;
             vertical-align: middle;
-            padding: 0 4px;
+            padding: 0 6px;
         }
 
         .numerator {
-            border-bottom: 1px solid var(--text-light);
-            padding-bottom: 2px;
+            border-bottom: 2px solid var(--text-light);
+            padding-bottom: 4px;
             width: 100%;
             text-align: center;
         }
 
         .denominator {
-            padding-top: 2px;
+            padding-top: 4px;
             width: 100%;
             text-align: center;
         }
@@ -188,51 +255,63 @@
         .highlight-new { color: var(--pink); font-weight: bold; }
         .highlight-old { color: var(--purple); font-weight: bold; }
 
-        /* Real-Time Result Badge */
-        .result-box {
-            background: var(--lime);
+        /* Economic State Indicator Module */
+        .economic-state-banner {
+            border-radius: 18px;
+            padding: 20px;
             color: var(--bg-dark);
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-            font-weight: 800;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-style: preserve-3d;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .result-box h2 {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.8;
-        }
-
-        .result-value {
-            font-size: 32px;
-            font-weight: 800;
-            margin-top: 4px;
-        }
-
-        /* Interactive Cookie Visualizer */
-        .cookie-container {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 12px;
-            background: #09090B;
-            padding: 12px;
-            border-radius: 12px;
-        }
-
-        .cookie-basket {
-            text-align: center;
+        .state-tag {
             font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(0,0,0,0.15);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .state-title {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .state-description {
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        /* Master Global Metric Output */
+        .global-result-box {
+            background: #27272A;
+            border-radius: 16px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #3F3F46;
+        }
+
+        .global-result-box h2 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: var(--text-muted);
         }
 
-        .basket-graphic {
-            font-size: 28px;
-            margin-bottom: 4px;
-            transition: transform 0.3s ease;
+        .global-result-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--lime);
         }
     </style>
 </head>
@@ -240,63 +319,79 @@
 
     <div class="widget-container">
         <div class="header">
-            <h1>Cookie <span>Inflation</span> Tracker</h1>
-            <p>Tracking the cost of a standard assorted basket of cookies over time to calculate real-time inflation.</p>
+            <h1>Macroeconomic <span>Inflation</span> Dashboard</h1>
+            <p>Adjust market variables to transform the physical commodity asset scale and determine real-world structural states of the economy.</p>
         </div>
 
-        <div class="card-perspective">
-            <div class="interactive-card" id="inputCard">
-                <span class="card-title title-purple">1. Market Basket Pricing</span>
-                
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>Old Cookie Basket Cost (CPI Old)</span>
-                        <span class="val" style="color: var(--purple);">$<span id="lblOld">100</span></span>
+        <div class="dashboard-grid">
+            
+            <div class="card-perspective">
+                <div class="interactive-card" id="cookieCard">
+                    <div>
+                        <span class="card-title title-purple">Visual Asset Multiplier Window</span>
                     </div>
-                    <input type="range" id="cpiOld" min="50" max="200" value="100">
-                </div>
-
-                <div class="control-group">
-                    <div class="control-label">
-                        <span>New Cookie Basket Cost (CPI New)</span>
-                        <span class="val" style="color: var(--pink);">$<span id="lblNew">125</span></span>
-                    </div>
-                    <input type="range" id="cpiNew" min="50" max="250" value="125">
-                </div>
-
-                <div class="cookie-container">
-                    <div class="cookie-basket" id="basketOld">
-                        <div class="basket-graphic">🍪</div>
-                        <div>Past Basket</div>
-                    </div>
-                    <div class="cookie-basket" id="basketNew">
-                        <div class="basket-graphic">🍪</div>
-                        <div>Present Basket</div>
+                    
+                    <div class="giant-cookie-showcase">
+                        <div class="cookie-vault-box">
+                            <div class="giant-cookie-graphic" id="cookieOld">🍪</div>
+                            <span>Past Basket Base<br>($<span id="labelOldSub">100</span>)</span>
+                        </div>
+                        <div class="cookie-vault-box">
+                            <div class="giant-cookie-graphic" id="cookieNew">🍪</div>
+                            <span>Present Basket Scale<br>($<span id="labelNewSub">100</span>)</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card-perspective">
-            <div class="interactive-card" id="formulaCard">
-                <span class="card-title title-pink">2. The Inflation Formula</span>
+            <div class="right-column">
                 
+                <div class="card-perspective">
+                    <div class="interactive-card" id="controlCard">
+                        <span class="card-title title-pink">Market Index Inputs</span>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>CPI Target Base (Old Cost)</span>
+                                <span class="val" style="color: var(--purple);">$<span id="lblOld">100</span></span>
+                            </div>
+                            <input type="range" id="cpiOld" min="50" max="200" value="100">
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>CPI Current Terminal (New Cost)</span>
+                                <span class="val" style="color: var(--pink);">$<span id="lblNew">105</span></span>
+                            </div>
+                            <input type="range" id="cpiNew" min="20" max="300" value="105">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="formula-display">
                     <div class="formula-line">
                         <span>Inflation Rate =</span>
                         <div class="fraction">
-                            <span class="numerator"><span class="highlight-new" id="fNew">125</span> - <span class="highlight-old" id="fOld1">100</span></span>
+                            <span class="numerator"><span class="highlight-new" id="fNew">105</span> - <span class="highlight-old" id="fOld1">100</span></span>
                             <span class="denominator"><span class="highlight-old" id="fOld2">100</span></span>
                         </div>
                         <span>× 100</span>
                     </div>
                 </div>
 
-                <div class="result-box" id="resultBox">
-                    <h2>Live Inflation Rate</h2>
-                    <div class="result-value"><span id="rateResult">25.0</span>%</div>
+                <div class="global-result-box">
+                    <h2>Calculated Rate Output</h2>
+                    <div class="global-result-value"><span id="rateResult">5.0</span>%</div>
                 </div>
+
+                <div class="economic-state-banner" id="stateBanner">
+                    <span class="state-tag">Economic Condition Matrix</span>
+                    <div class="state-title" id="stateTitle">Creeping Inflation</div>
+                    <div class="state-description" id="stateDesc">Healthy baseline growth pattern. Standard consumer operations active.</div>
+                </div>
+
             </div>
+
         </div>
     </div>
 
@@ -305,60 +400,103 @@
         const cpiNewInput = document.getElementById('cpiNew');
         const lblOld = document.getElementById('lblOld');
         const lblNew = document.getElementById('lblNew');
+        const labelOldSub = document.getElementById('labelOldSub');
+        const labelNewSub = document.getElementById('labelNewSub');
         
         const fOld1 = document.getElementById('fOld1');
         const fOld2 = document.getElementById('fOld2');
         const fNew = document.getElementById('fNew');
         const rateResult = document.getElementById('rateResult');
         
-        const basketOld = document.querySelector('#basketOld .basket-graphic');
-        const basketNew = document.querySelector('#basketNew .basket-graphic');
-        const resultBox = document.getElementById('resultBox');
+        const cookieOld = document.getElementById('cookieOld');
+        const cookieNew = document.getElementById('cookieNew');
+        
+        const stateBanner = document.getElementById('stateBanner');
+        const stateTitle = document.getElementById('stateTitle');
+        const stateDesc = document.getElementById('stateDesc');
 
         function updateCalculations() {
             const oldVal = parseFloat(cpiOldInput.value);
             const newVal = parseFloat(cpiNewInput.value);
 
-            // Update text metrics
             lblOld.innerText = oldVal;
             lblNew.innerText = newVal;
+            labelOldSub.innerText = oldVal;
+            labelNewSub.innerText = newVal;
             fOld1.innerText = oldVal;
             fOld2.innerText = oldVal;
             fNew.innerText = newVal;
 
-            // Calculate Inflation Rate
+            // Mathematical Engine Calculation
             const inflationRate = ((newVal - oldVal) / oldVal) * 100;
             rateResult.innerText = inflationRate.toFixed(1);
 
-            // Dynamic size transformation based on relative value shifts
-            basketOld.style.transform = `scale(${0.7 + (oldVal / 200)})`;
-            basketNew.style.transform = `scale(${0.7 + (newVal / 200)})`;
+            /* CRITICAL CHANGE: SIGNIFICANT SCALING CALCULATOR
+               Drastically scales visual size representations based on raw numeric ratios 
+            */
+            const baseScaleOld = (oldVal / 100);
+            const baseScaleNew = (newVal / 100);
+            
+            cookieOld.style.transform = `scale(${Math.max(0.3, Math.min(baseScaleOld * 1.4, 2.5))})`;
+            cookieNew.style.transform = `scale(${Math.max(0.3, Math.min(baseScaleNew * 1.4, 2.5))})`;
 
-            // Transform color intensity of the result badge if negative inflation (deflation)
-            if (inflationRate < 0) {
-                resultBox.style.background = '#FF79DA';
+            /* INTEGRATION OF 6 DISTINCT STATES OF REAL-WORLD ECONOMY 
+            */
+            let stateName = "";
+            let stateInfo = "";
+            let stateColor = "";
+
+            if (inflationRate >= 50) {
+                // State 1: Hyperinflation
+                stateName = "🚨 Hyperinflation";
+                stateInfo = "Currency is devaluing destructively. Cash balances rapidly become worthless as price vectors scale exponentially out of institutional control.";
+                stateColor = "var(--hyperinflation)";
+            } else if (inflationRate >= 10 && inflationRate < 50) {
+                // State 2: Galloping Inflation
+                stateName = "🏃💨 Galloping Inflation";
+                stateInfo = "High, aggressive structural price climbs. Capital flight begins, and central banks are forced into rapid, emergency interest rate hikes.";
+                stateColor = "var(--pink)";
+            } else if (inflationRate > 0 && inflationRate < 10) {
+                // State 3: Creeping Inflation
+                stateName = "🌱 Creeping Inflation";
+                stateInfo = "Mild, predictable expansion. Optimal systemic condition indicating healthy product demand and sustained labor productivity gains.";
+                stateColor = "var(--lime)";
             } else if (inflationRate === 0) {
-                resultBox.style.background = '#FFFFFF';
-            } else {
-                resultBox.style.background = '#D4FF00';
+                // State 4: Absolute Price Stability
+                stateName = "⚖️ Price Stability";
+                stateInfo = "Perfect structural equilibrium. Net zero shifting in average market indexes. Capital velocities remain constant.";
+                stateColor = "var(--stability)";
+            } else if (inflationRate < 0 && inflationRate >= -10) {
+                // State 5: Systemic Deflation
+                stateName = "❄️ Deflationary Realignment";
+                stateInfo = "Falling aggregate consumer price metrics. Encourages hoarding of cash reserves, dampening systemic investments and delaying commercial spend.";
+                stateColor = "var(--deflation)";
+            } else if (inflationRate < -10) {
+                // State 6: Debt-Deflationary Spiral
+                stateName = "💥 Debt-Deflation Spiral";
+                stateInfo = "Severe systemic contraction. Collapsing product margins drive structural bankruptcies and mass insolvency as real debt burdens surge violently upward.";
+                stateColor = "var(--spiral)";
             }
+
+            // Apply calculated state transformations to UI modules
+            stateTitle.innerText = stateName;
+            stateDesc.innerText = stateInfo;
+            stateBanner.style.backgroundColor = stateColor;
         }
 
-        // 3D Warp / Perspective Tilt Effect
+        // Apply Premium 3D Perspective Transform
         function applyWarpEffect(cardId) {
             const card = document.getElementById(cardId);
             card.parentElement.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                
                 const xc = rect.width / 2;
                 const yc = rect.height / 2;
+                const angleX = (yc - y) / 14;
+                const angleY = (x - xc) / 14;
                 
-                const angleX = (yc - y) / 10;
-                const angleY = (x - xc) / 10;
-                
-                card.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1.02)`;
+                card.style.transform = `rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1.01)`;
             });
 
             card.parentElement.addEventListener('mouseleave', () => {
@@ -366,14 +504,13 @@
             });
         }
 
-        // Initialize listeners
         cpiOldInput.addEventListener('input', updateCalculations);
         cpiNewInput.addEventListener('input', updateCalculations);
 
-        applyWarpEffect('inputCard');
-        applyWarpEffect('formulaCard');
-
-        // Initial Run
+        applyWarpEffect('cookieCard');
+        applyWarpEffect('controlCard');
+        
+        // Render Initial Matrix State
         updateCalculations();
     </script>
 </body>
