@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Glass Cube Image Trapper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #ffffff; /* White BG as requested */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .ui-layer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to canvas */
+            width: 100%;
+            max-width: 400px;
+            padding: 0 1rem;
+        }
+        .control-panel {
+            pointer-events: auto; /* Re-enable clicks for the panel */
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Custom file upload button styling */
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- User Interface Layer -->
+    <div class="ui-layer">
+        <div class="control-panel p-6 rounded-2xl text-center transition-transform hover:scale-[1.02] duration-300">
+            <div class="mb-4">
+                <svg class="w-10 h-10 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Cube Trapper</h2>
+                <p class="text-sm text-gray-500 mt-1">Drag to rotate • Scroll to zoom</p>
+            </div>
+
+            <div class="file-upload-wrapper">
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Upload PNG Image
+                </button>
+                <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/webp">
+            </div>
+            <p id="fileNameDisplay" class="text-xs text-gray-400 mt-3 truncate hidden"></p>
+        </div>
+    </div>
+
+    <!-- Three.js Setup (Using ES Modules via Skypack/Unpkg for modern features) -->
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/controls/OrbitControls.js';
+        import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/environments/RoomEnvironment.js';
+
+        // 1. Scene Setup
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff); // Pure white background
+
+        // 2. Camera Setup
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(4, 3, 5);
+
+        // 3. Renderer Setup
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        container.appendChild(renderer.domElement);
+
+        // 4. Environment & Lighting (Crucial for realistic glass)
+        // RoomEnvironment creates a hidden realistic room to reflect off the glass
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+        
+        // Add some subtle directional light to enhance edges
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
+
+        // 5. Create the Glass Cube
+        const cubeSize = 2.5;
+        const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        
+        // Advanced Physical Material for realistic glass
+        const glassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.1,
+            roughness: 0.05,        // Very smooth surface
+            transmission: 1.0,      // Fully transparent like glass
+            ior: 1.52,              // Index of Refraction for standard glass
+            thickness: 1.5,         // Simulates volume for refraction bending
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            side: THREE.DoubleSide,
+            transparent: true
+        });
+
+        const cube = new THREE.Mesh(geometry, glassMaterial);
+        scene.add(cube);
+
+        // Add very faint edges to help define the cube shape against pure white
+        const edges = new THREE.EdgesGeometry(geometry);
+        const edgeMaterial = new THREE.LineBasicMaterial({ 
+            color: 0x000000, 
+            transparent: true, 
+            opacity: 0.05 
+        });
+        const cubeEdges = new THREE.LineSegments(edges, edgeMaterial);
+        cube.add(cubeEdges); // Attach to cube so they move together
+
+        // 6. Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 3;
+        controls.maxDistance = 15;
+
+        // 7. Image Handling Logic
+        let currentSprite = null;
+
+        function loadAndTrapImage(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const texture = new THREE.Texture(img);
+                    texture.needsUpdate = true;
+                    texture.colorSpace = THREE.SRGBColorSpace; // Ensure correct colors
+
+                    // Remove existing image if there is one
+                    if (currentSprite) {
+                        cube.remove(currentSprite);
+                        currentSprite.material.map.dispose();
+                        currentSprite.material.dispose();
+                    }
+
+                    // We use a Sprite so the image always faces the camera, 
+                    // maintaining the illusion of volume inside the 3D space
+                    const spriteMaterial = new THREE.SpriteMaterial({ 
+                        map: texture, 
+                        color: 0xffffff, 
+                        transparent: true,
+                        depthTest: true,
+                        depthWrite: false // Helps prevent sorting issues inside glass
+                    });
+                    
+                    currentSprite = new THREE.Sprite(spriteMaterial);
+
+                    // Calculate scale to fit comfortably inside the cube (cube size is 2.5)
+                    const maxInnerSize = 1.8; 
+                    const aspect = img.width / img.height;
+                    
+                    if (aspect > 1) {
+                        currentSprite.scale.set(maxInnerSize, maxInnerSize / aspect, 1);
+                    } else {
+                        currentSprite.scale.set(maxInnerSize * aspect, maxInnerSize, 1);
+                    }
+
+                    // Add the image inside the cube
+                    cube.add(currentSprite);
+                    
+                    // Update UI
+                    const nameDisplay = document.getElementById('fileNameDisplay');
+                    nameDisplay.textContent = file.name;
+                    nameDisplay.classList.remove('hidden');
+                };
+                img.src = event.target.result;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Event Listener for File Input
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                loadAndTrapImage(file);
+            }
+        });
+
+        // 8. Animation Loop
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            // Gently auto-rotate the cube for a nice showcase effect
+            cube.rotation.y += 0.2 * delta;
+            cube.rotation.x += 0.1 * delta;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 9. Handle Window Resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start Animation
+        animate();
+
+    </script>
+</body>
+</html>
