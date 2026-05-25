@@ -95,7 +95,6 @@ let time = 0;
 let speed = 1;
 let intensity = 0.05;
 let angle = 0;
-
 let baseScaleFit = 1;
 
 speedSlider.oninput = () => { speed = +speedSlider.value; speedVal.textContent = speed; };
@@ -111,10 +110,7 @@ upload.addEventListener('change', (e) => {
         img.onload = () => {
             canvas.width = img.width * 1.2;
             canvas.height = img.height * 1.2;
-
-            // 🔥 precompute scale (big performance win)
             baseScaleFit = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.8;
-
             animate();
         };
         img.src = ev.target.result;
@@ -122,7 +118,7 @@ upload.addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-function draw(ctx, w, h, t) {
+function draw(ctx, w, h, t, scaleFitOverride=null) {
     ctx.clearRect(0, 0, w, h);
 
     const sin = Math.sin(t);
@@ -132,16 +128,18 @@ function draw(ctx, w, h, t) {
     const cx = w / 2;
     const cy = h / 2;
 
+    const scaleFit = scaleFitOverride ?? baseScaleFit;
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate((angle * Math.PI/180) * sin);
     ctx.scale(sx, sy);
 
     ctx.drawImage(img,
-        -img.width * baseScaleFit / 2,
-        -img.height * baseScaleFit / 2,
-        img.width * baseScaleFit,
-        img.height * baseScaleFit
+        -img.width * scaleFit / 2,
+        -img.height * scaleFit / 2,
+        img.width * scaleFit,
+        img.height * scaleFit
     );
 
     ctx.restore();
@@ -153,7 +151,7 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-// 🚀 HIGH-FPS STABLE RECORDING (FIXED)
+// ✅ CLEAN SIMULATION EXPORT (NO DUPLICATES, NO SYNTAX ERRORS)
 
 downloadBtn.onclick = () => {
     if (!img.src) {
@@ -167,11 +165,13 @@ downloadBtn.onclick = () => {
     offCanvas.height = res;
     const offCtx = offCanvas.getContext('2d');
 
+    const FPS = 30;
+    const DURATION = 5;
+    const TOTAL_FRAMES = FPS * DURATION;
+
     const scaleFit = Math.min(res / img.width, res / img.height) * 0.8;
 
-    const FPS = 60; // 🔥 force smooth output
     const stream = offCanvas.captureStream(FPS);
-
     const recorder = new MediaRecorder(stream);
     const chunks = [];
 
@@ -180,6 +180,10 @@ downloadBtn.onclick = () => {
     };
 
     recorder.onstop = () => {
+        if (chunks.length === 0) {
+            alert('Recording failed');
+            return;
+        }
         const blob = new Blob(chunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
 
@@ -193,40 +197,25 @@ downloadBtn.onclick = () => {
         URL.revokeObjectURL(url);
     };
 
-    recorder.start(100);
+    recorder.start();
 
-    let t = 0;
-    const total = 5 * Math.PI * 2;
-    const dt = 0.05 * speed;
+    let frame = 0;
 
-    const interval = setInterval(() => {
-        offCtx.clearRect(0, 0, res, res);
+    function renderFrame() {
+        const t = (frame / TOTAL_FRAMES) * (Math.PI * 2 * 5);
 
-        const sin = Math.sin(t);
-        const sx = 1 + intensity * sin;
-        const sy = 1 - intensity * sin;
+        draw(offCtx, res, res, t, scaleFit);
 
-        offCtx.save();
-        offCtx.translate(res/2, res/2);
-        offCtx.rotate((angle * Math.PI/180) * sin);
-        offCtx.scale(sx, sy);
+        frame++;
 
-        offCtx.drawImage(img,
-            -img.width * scaleFit / 2,
-            -img.height * scaleFit / 2,
-            img.width * scaleFit,
-            img.height * scaleFit
-        );
-
-        offCtx.restore();
-
-        t += dt;
-
-        if (t >= total) {
-            clearInterval(interval);
+        if (frame < TOTAL_FRAMES) {
+            requestAnimationFrame(renderFrame);
+        } else {
             setTimeout(() => recorder.stop(), 200);
         }
-    }, 1000 / FPS);
+    }
+
+    renderFrame();
 };
 </script>
 
