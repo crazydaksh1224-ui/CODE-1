@@ -1,0 +1,615 @@
+--- tax-economy-widget.html (原始)
+
+
++++ tax-economy-widget.html (修改后)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Economy Explorer - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            perspective: 1000px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: rotateY(10deg) rotateX(5deg) translateZ(20px) scale(1.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            align-self: flex-start;
+            margin-top: 20px;
+        }
+
+        .card-button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Game Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.5s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) rotateX(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-instruction {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* Sliders */
+        .slider-container {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .slider-value {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Results Display */
+        .results-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .explanation-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .explanation-title {
+            font-weight: 700;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .explanation-text {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto 0;
+            transition: transform 0.3s ease;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ Tax Economy Explorer</h1>
+        <p class="subtitle">Interactive simulations to understand how tax policies shape economies</p>
+
+        <div class="cards-container">
+            <!-- Card 1: Income Tax Game -->
+            <div class="card" onclick="openGame('income')">
+                <span class="card-icon">💰</span>
+                <h3 class="card-title">Income Tax Simulator</h3>
+                <p class="card-description">
+                    Explore how income tax rates affect government revenue, citizen satisfaction, and economic growth.
+                    Find the optimal balance that maximizes societal welfare.
+                </p>
+                <button class="card-button">Play Now →</button>
+            </div>
+
+            <!-- Card 2: Corporate Tax Game -->
+            <div class="card" onclick="openGame('corporate')">
+                <span class="card-icon">🏢</span>
+                <h3 class="card-title">Corporate Tax Challenge</h3>
+                <p class="card-description">
+                    Manage corporate tax rates to balance business investment, job creation, and public funding.
+                    Learn the trade-offs between competitiveness and revenue.
+                </p>
+                <button class="card-button">Play Now →</button>
+            </div>
+
+            <!-- Card 3: Sales Tax Game -->
+            <div class="card" onclick="openGame('sales')">
+                <span class="card-icon">🛒</span>
+                <h3 class="card-title">Sales Tax Explorer</h3>
+                <p class="card-description">
+                    Discover how consumption taxes impact consumer spending, inflation, and overall economic activity.
+                    Experiment with different rates to see real-world effects.
+                </p>
+                <button class="card-button">Play Now →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Modal -->
+    <div class="modal" id="gameModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="game-title" id="gameTitle">Game Title</h2>
+            <p class="game-instruction" id="gameInstruction">Instructions</p>
+
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Tax Rate (%)</span>
+                    <span class="slider-value" id="taxRateValue">20%</span>
+                </div>
+                <input type="range" id="taxRate" min="0" max="100" value="20" oninput="updateGame()">
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span id="param2Label">Enforcement Level</span>
+                    <span class="slider-value" id="param2Value">50%</span>
+                </div>
+                <input type="range" id="param2" min="0" max="100" value="50" oninput="updateGame()">
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span id="param3Label">Exemption Threshold</span>
+                    <span class="slider-value" id="param3Value">$30,000</span>
+                </div>
+                <input type="range" id="param3" min="0" max="100" value="30" oninput="updateGame()">
+            </div>
+
+            <div class="results-section">
+                <h3 class="results-title">Economic Impact</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric1">75%</div>
+                        <div class="metric-label" id="metric1Label">Government Revenue</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric2">60%</div>
+                        <div class="metric-label" id="metric2Label">Economic Growth</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric3">80%</div>
+                        <div class="metric-label" id="metric3Label">Public Satisfaction</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation-box">
+                <div class="explanation-title">💡 Key Insight</div>
+                <div class="explanation-text" id="explanationText">
+                    Adjust the sliders above to see how different tax parameters affect the economy.
+                    There's often a "sweet spot" that balances competing interests.
+                </div>
+            </div>
+
+            <button class="play-btn" onclick="randomizeScenario()">🎲 Try Random Scenario</button>
+            <button class="reset-btn" onclick="resetSliders()">🔄 Reset to Default</button>
+        </div>
+    </div>
+
+    <script>
+        let currentGame = '';
+
+        const gameConfig = {
+            income: {
+                title: '💰 Income Tax Simulator',
+                instruction: 'Adjust income tax rate, enforcement level, and exemption threshold to find the optimal balance for economic prosperity.',
+                param2Label: 'Enforcement Level (%)',
+                param3Label: 'Exemption Threshold ($K)',
+                metric1Label: 'Government Revenue',
+                metric2Label: 'Economic Growth',
+                metric3Label: 'Citizen Satisfaction'
+            },
+            corporate: {
+                title: '🏢 Corporate Tax Challenge',
+                instruction: 'Balance corporate tax rates with incentives and loopholes to maximize job creation while maintaining public revenue.',
+                param2Label: 'Tax Incentives (%)',
+                param3Label: 'Loophole Closures (%)',
+                metric1Label: 'Business Investment',
+                metric2Label: 'Job Creation',
+                metric3Label: 'Public Revenue'
+            },
+            sales: {
+                title: '🛒 Sales Tax Explorer',
+                instruction: 'Experiment with sales tax rates, essential goods exemptions, and luxury taxes to understand consumption patterns.',
+                param2Label: 'Essential Goods Exempt (%)',
+                param3Label: 'Luxury Tax Rate (%)',
+                metric1Label: 'Consumer Spending',
+                metric2Label: 'Price Stability',
+                metric3Label: 'Tax Revenue'
+            }
+        };
+
+        function openGame(gameType) {
+            currentGame = gameType;
+            const config = gameConfig[gameType];
+
+            document.getElementById('gameTitle').textContent = config.title;
+            document.getElementById('gameInstruction').textContent = config.instruction;
+            document.getElementById('param2Label').textContent = config.param2Label;
+            document.getElementById('param3Label').textContent = config.param3Label;
+            document.getElementById('metric1Label').textContent = config.metric1Label;
+            document.getElementById('metric2Label').textContent = config.metric2Label;
+            document.getElementById('metric3Label').textContent = config.metric3Label;
+
+            resetSliders();
+            document.getElementById('gameModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('gameModal').style.display = 'none';
+        }
+
+        function updateGame() {
+            const taxRate = parseInt(document.getElementById('taxRate').value);
+            const param2 = parseInt(document.getElementById('param2').value);
+            const param3 = parseInt(document.getElementById('param3').value);
+
+            // Update display values
+            document.getElementById('taxRateValue').textContent = taxRate + '%';
+            document.getElementById('param2Value').textContent = param2 + '%';
+
+            if (currentGame === 'income') {
+                document.getElementById('param3Value').textContent = '$' + (param3 * 1000).toLocaleString();
+            } else {
+                document.getElementById('param3Value').textContent = param3 + '%';
+            }
+
+            // Calculate metrics based on game type
+            let metric1, metric2, metric3;
+
+            if (currentGame === 'income') {
+                // Income tax calculations
+                const optimalRate = 35;
+                const rateDiff = Math.abs(taxRate - optimalRate);
+
+                metric1 = Math.min(100, Math.max(0, (taxRate * 0.8) + (param2 * 0.2)));
+                metric2 = Math.min(100, Math.max(0, 100 - (taxRate * 0.7) + (param3 * 0.3)));
+                metric3 = Math.min(100, Math.max(0, 100 - rateDiff + (param3 * 0.2)));
+
+                updateExplanation(taxRate, param2, param3, 'income');
+            } else if (currentGame === 'corporate') {
+                // Corporate tax calculations
+                metric1 = Math.min(100, Math.max(0, 100 - taxRate + param2));
+                metric2 = Math.min(100, Math.max(0, 80 - (taxRate * 0.5) + param2 + (param3 * 0.3)));
+                metric3 = Math.min(100, Math.max(0, (taxRate * 0.6) + (param3 * 0.4)));
+
+                updateExplanation(taxRate, param2, param3, 'corporate');
+            } else {
+                // Sales tax calculations
+                metric1 = Math.min(100, Math.max(0, 100 - taxRate + param2));
+                metric2 = Math.min(100, Math.max(0, 100 - (taxRate * 0.5) + (param2 * 0.3)));
+                metric3 = Math.min(100, Math.max(0, (taxRate * 0.7) + (param3 * 0.3)));
+
+                updateExplanation(taxRate, param2, param3, 'sales');
+            }
+
+            // Animate metric updates
+            animateMetric('metric1', metric1);
+            animateMetric('metric2', metric2);
+            animateMetric('metric3', metric3);
+        }
+
+        function animateMetric(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseFloat(element.textContent);
+            const increment = (targetValue - currentValue) / 20;
+
+            if (Math.abs(targetValue - currentValue) > 1) {
+                element.textContent = (currentValue + increment).toFixed(0) + '%';
+                setTimeout(() => animateMetric(elementId, targetValue), 50);
+            } else {
+                element.textContent = targetValue.toFixed(0) + '%';
+            }
+        }
+
+        function updateExplanation(taxRate, param2, param3, gameType) {
+            let explanation = '';
+
+            if (gameType === 'income') {
+                if (taxRate > 60) {
+                    explanation = '⚠️ Very high tax rates may discourage work and investment, potentially reducing overall revenue despite the higher rate.';
+                } else if (taxRate < 15) {
+                    explanation = '⚠️ Very low tax rates might not generate sufficient revenue for public services and infrastructure.';
+                } else if (taxRate >= 30 && taxRate <= 40) {
+                    explanation = '✅ This range often represents a balanced approach, following the Laffer Curve principle where revenue is optimized.';
+                } else {
+                    explanation = '📊 Moderate tax rates can balance revenue generation with economic incentives.';
+                }
+
+                if (param2 > 70) {
+                    explanation += ' Strong enforcement increases compliance but requires more administrative resources.';
+                }
+
+                if (param3 > 50) {
+                    explanation += ' Higher exemptions protect low-income earners but reduce the tax base.';
+                }
+            } else if (gameType === 'corporate') {
+                if (taxRate > 40) {
+                    explanation = '⚠️ High corporate taxes may drive businesses to relocate or reduce investment in your economy.';
+                } else if (taxRate < 15) {
+                    explanation = '⚠️ Very low corporate taxes might lead to insufficient public revenue despite high business activity.';
+                } else {
+                    explanation = '✅ Moderate corporate taxes can attract business while generating necessary public revenue.';
+                }
+
+                if (param2 > 60) {
+                    explanation += ' Generous incentives can stimulate specific industries but reduce immediate revenue.';
+                }
+            } else {
+                if (taxRate > 25) {
+                    explanation = '⚠️ High sales taxes can reduce consumer spending and disproportionately affect lower-income households.';
+                } else if (taxRate < 5) {
+                    explanation = '⚠️ Very low sales taxes may limit an important revenue source for public services.';
+                } else {
+                    explanation = '✅ Moderate sales taxes provide steady revenue while maintaining consumer purchasing power.';
+                }
+
+                if (param2 > 60) {
+                    explanation += ' Exempting essential goods protects vulnerable populations but reduces revenue.';
+                }
+            }
+
+            document.getElementById('explanationText').textContent = explanation;
+        }
+
+        function randomizeScenario() {
+            document.getElementById('taxRate').value = Math.floor(Math.random() * 101);
+            document.getElementById('param2').value = Math.floor(Math.random() * 101);
+            document.getElementById('param3').value = Math.floor(Math.random() * 101);
+            updateGame();
+        }
+
+        function resetSliders() {
+            document.getElementById('taxRate').value = 20;
+            document.getElementById('param2').value = 50;
+            document.getElementById('param3').value = 30;
+            updateGame();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('gameModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize
+        updateGame();
+    </script>
+</body>
+</html>
